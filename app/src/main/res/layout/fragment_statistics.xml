@@ -1,0 +1,87 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.teamhotspots.hotspots.Statistics">
+
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20sp">
+
+            <TextView
+                android:text="250"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/stat_total_pts_num"
+                android:layout_weight="0.5"
+                android:gravity="center_horizontal"
+                android:textSize="80sp" />
+
+            <TextView
+                android:text="TOTAL POINTS"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/stat_total_pts"
+                android:layout_weight="0.5"
+                android:textSize="24sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20sp">
+
+            <TextView
+                android:text="37"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/stat_total_posts_num"
+                android:layout_weight="0.5"
+                android:gravity="center_horizontal"
+                android:textSize="80sp" />
+
+            <TextView
+                android:text="TOTAL POSTS"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/stat_total_posts"
+                android:layout_weight="0.5"
+                android:textSize="24sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20sp">
+
+            <TextView
+                android:text="7"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/stat_hotspots_num"
+                android:layout_weight="0.5"
+                android:gravity="center_horizontal"
+                android:textSize="80sp" />
+
+            <TextView
+                android:text="HOTSPOTS"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/stat_hotspots"
+                android:layout_weight="0.5"
+                android:textSize="24sp" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>
