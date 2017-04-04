@@ -1,0 +1,173 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.teamhotspots.hotspots.Settings">
+
+    <!-- TODO: Update blank fragment layout -->
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp">
+
+        <TextView
+            android:text="Username:"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/set_username"
+            android:textSize="24sp"
+            android:layout_marginTop="30dp"
+            android:textStyle="normal|bold" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:ems="10"
+            android:id="@+id/set_user_enter"
+            android:hint="Enter username here"
+            android:background="@drawable/settings_edit_items"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:paddingLeft="10dp" />
+
+        <TextView
+            android:text="Choose Icon:"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/set_icon"
+            android:textSize="24dp"
+            android:layout_marginTop="20dp"
+            android:textStyle="normal|bold" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/set_icon_list">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/img_bird2"
+                android:id="@+id/imageView3"
+                android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:maxWidth="75dp"
+                android:maxHeight="75dp"
+                android:scaleType="fitCenter" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/img_bird5"
+                android:id="@+id/imageView5"
+                android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:maxWidth="75dp"
+                android:maxHeight="75dp"
+                android:scaleType="fitCenter"/>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/img_bird3"
+                android:id="@+id/imageView4"
+                android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:maxWidth="75dp"
+                android:maxHeight="75dp"
+                android:scaleType="fitCenter"/>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/img_bird1"
+                android:id="@+id/imageView2"
+                android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:maxWidth="75dp"
+                android:maxHeight="75dp"
+                android:scaleType="fitCenter"/>
+        </LinearLayout>
+
+        <TextView
+            android:text="Map View Radius:"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/set_map_view"
+            android:layout_marginTop="20dp"
+            android:textSize="24dp"
+            android:textStyle="normal|bold" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:ems="10"
+                android:id="@+id/set_map_num"
+                android:layout_weight=".25"
+                android:hint="25"
+                android:gravity="center_vertical|center_horizontal"
+                android:background="@drawable/settings_edit_items"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:text="meters"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/set_map_meters"
+                android:layout_weight=".75"
+                android:textSize="18sp"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="20dp">
+
+            <Button
+                android:text="CANCEL"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/settings_btn_cancel"
+                android:layout_weight="0.5"
+                android:textSize="24sp"
+                android:textColor="@color/white"
+                android:background="@drawable/button_cancel"
+                android:layout_marginRight="10dp"
+                android:textStyle="normal|bold" />
+
+            <Button
+                android:text="SAVE"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/settings_btn_save"
+                android:background="@drawable/button_save"
+                android:textSize="24sp"
+                android:layout_weight="0.5"
+                android:textColor="@color/white"
+                android:layout_marginLeft="10dp"
+                android:textStyle="normal|bold" />
+        </LinearLayout>
+
+    </LinearLayout>
+</FrameLayout>

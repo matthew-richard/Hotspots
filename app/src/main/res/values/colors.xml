@@ -3,4 +3,12 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+    <color name="hotspotRed">#e2135a</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="grey">#929292</color>
+    <color name="lightGrey">#aaaaaa</color>
+    <color name="darkGrey">#606060</color>
+    <color name="darkRed">#bb285c</color>
 </resources>
