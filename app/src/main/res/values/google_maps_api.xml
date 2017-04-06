@@ -1,0 +1,8 @@
+<resources>
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
+        AIzaSyBJExV5nPVNs2OuVZyKOEjQWkmAjaQxWhw
+    </string>
+    <integer name="default_zoom_level">18</integer>
+    <integer name="min_zoom_level">17</integer>
+    <integer name="max_zoom_level">19</integer>
+</resources>

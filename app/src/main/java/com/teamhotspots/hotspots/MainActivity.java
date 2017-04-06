@@ -1,12 +1,18 @@
 package com.teamhotspots.hotspots;
 
+import android.*;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -18,10 +24,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity
-        implements MapHome.OnFragmentInteractionListener,
+        implements OnRequestPermissionsResultCallback,
         Settings.OnFragmentInteractionListener,
         Statistics.OnFragmentInteractionListener,
         NavigationView.OnNavigationItemSelectedListener {
+
+    /* For requesting location permissions at runtime */
+    public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,5 +133,29 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onFragmentInteraction(Uri uri) {
         //leave empty
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Handle user's decision to grant or deny location permissions to the app.
+        // See https://developer.android.com/training/permissions/requesting.html
+        switch (requestCode) {
+            case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+                /* TODO: Call map fragment's tryEnablingMyLocation() */
+
+                /* if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+
+                }
+                else {
+
+                } */
+            }
+        }
+
+        return;
     }
 }
