@@ -2,6 +2,8 @@ package com.teamhotspots.hotspots;
 
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -62,6 +64,9 @@ public class Feed extends Fragment {
     private void generatePosts() {
         posts.add(new Post(getString(R.string.anonymous), "My first post!", null));
         posts.add(new Post("Kathleen", "My second post!", null));
+        posts.add(new Post("Kathleen", "This is a really really really really really really really " +
+                "really really really really really really really really really really really really" +
+                " really really LONG post!", null));
     }
 
     private class PostAdapter extends ArrayAdapter<Post> {
@@ -103,8 +108,38 @@ public class Feed extends Fragment {
                 if (likes != null) {
                     likes.setText("" + p.getNumLikes());
                 }
+
+                ImageView thumbIcon = (ImageView) view.findViewById(R.id.like_icon);
+                thumbIcon.setOnClickListener(new ThumbIconOnClickListener(p, thumbIcon, likes));
             }
             return view;
+        }
+    }
+
+    private class ThumbIconOnClickListener implements View.OnClickListener {
+        private Post post;
+        private TextView likes;
+        private ImageView thumbIcon;
+        private boolean pressed = false;
+
+        public ThumbIconOnClickListener(Post post, ImageView thumbIcon, TextView likes) {
+            this.post = post;
+            this.thumbIcon = thumbIcon;
+            this.likes = likes;
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (!pressed) {
+                post.upvote();
+                thumbIcon.setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_ATOP);
+            } else {
+                post.undoVote();
+                thumbIcon.clearColorFilter();
+            }
+
+            this.likes.setText("" + post.getNumLikes());
+            this.pressed = !this.pressed;
         }
     }
 }

@@ -109,6 +109,10 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_settings) {
             fragmentClass = Settings.class;
         }
+        // TODO: Delete this test code
+        else if (id == R.id.nav_feed) {
+            fragmentClass = Feed.class;
+        }
 
         try {
             fragment = (Fragment) fragmentClass.newInstance();

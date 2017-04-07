@@ -48,4 +48,6 @@ public class Post {
     public void upvote() {
         this.numLikes++;
     }
+
+    public void undoVote() { this.numLikes--; }
 }
