@@ -21,7 +21,6 @@
         <activity
             android:name=".NewPostActivity"
             android:label="@string/title_activity_new_post"
-            android:exported="true"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 

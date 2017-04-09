@@ -19,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.EditText;
 import android.widget.TextView;
 
 public class NewPostActivity extends AppCompatActivity {
@@ -105,6 +106,8 @@ public class NewPostActivity extends AppCompatActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_new_post, container, false);
+            EditText et = (EditText) rootView.findViewById(R.id.postText);
+            et.setSelection(et.getText().length());
             return rootView;
         }
     }
