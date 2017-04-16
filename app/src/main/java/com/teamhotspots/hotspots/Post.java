@@ -7,7 +7,7 @@ package com.teamhotspots.hotspots;
 public class Post {
     private String username;
     private String msg;
-    private Integer drawable;    // for this stage only
+    private Integer drawable;    // TODO: Figure out a better way to store this
     private int numLikes;
 
     public Post(String username, String msg, Integer drawable) {
@@ -50,4 +50,6 @@ public class Post {
     }
 
     public void undoVote() { this.numLikes--; }
+
+    public boolean isPicturePost() { return drawable != null; }
 }

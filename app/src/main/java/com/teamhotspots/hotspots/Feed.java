@@ -6,7 +6,9 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -14,6 +16,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -39,24 +42,20 @@ public class Feed extends Fragment {
         postsListView = (ListView) view.findViewById(R.id.feed_list);
         adapter = new PostAdapter(getActivity(), R.layout.post, posts);
         postsListView.setAdapter(adapter);
-/*
-        postsListView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+
+        TextView community = (TextView) view.findViewById(R.id.community_name);
+        community.setText("Johns Hopkins University");
+
+        registerForContextMenu(postsListView);
+
+        postsListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public void onItemClick(AdapterView<?>adapter,View v, int position, long id){
-                Post item = (Post) adapter.getItemAtPosition(position);
-
-                EditPost fragment = new EditPost();
-                Bundle args = new Bundle();
-                args.putLong(EditPost.DATE_MS, item.getDate().getTime());
-                args.putDouble(EditPost.HOURS, item.getHours());
-                args.putBoolean(EditPost.DAY, item.getDay());
-                args.putInt(EditPost.Post_TYPE, item.getPostType());
-                args.putInt(EditPost.WEATHER, item.getWeather());
-
-                fragment.setArguments(args);
-                getFragmentManager().beginTransaction().replace(R.id.content_frame, fragment).commit();
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
+                Post p = (Post) postsListView.getItemAtPosition(position);
+                if (p.isPicturePost()) postsListView.showContextMenu();
+                return true;
             }
-        });*/
+        });
 
         return view;
     }
@@ -67,6 +66,24 @@ public class Feed extends Fragment {
         posts.add(new Post("Kathleen", "This is a really really really really really really really " +
                 "really really really really really really really really really really really really" +
                 " really really LONG post!", null));
+        posts.add(new Post("Kathleen", "Dog!", R.drawable.husky));
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        menu.setHeaderTitle("Select The Action");
+        menu.add(0, v.getId(), 0, "Save to Gallery"); // groupId, itemId, order, title
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item){
+        if (item.getTitle()=="Save to Gallery"){
+            Toast.makeText(getActivity().getApplicationContext(),"Saved to gallery!",Toast.LENGTH_LONG).show();
+        } else {
+            return false;
+        }
+        return true;
     }
 
     private class PostAdapter extends ArrayAdapter<Post> {
@@ -97,8 +114,12 @@ public class Feed extends Fragment {
                     username.setText(p.getUsername());
                 }
 
-                if (picture != null && p.getDrawable() != null) {
+                if (picture != null && p.isPicturePost()) {
                     picture.setBackgroundResource(p.getDrawable());
+                    picture.setVisibility(View.VISIBLE);
+                } else if (picture!= null && !p.isPicturePost()) {
+                    picture.setVisibility(View.INVISIBLE);
+                    picture.setBackgroundResource(0);
                 }
 
                 if (message != null) {

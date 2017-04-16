@@ -4,6 +4,14 @@
     android:layout_height="match_parent"
     android:layout_margin="10dp">
 
+    <TextView
+        android:id="@+id/community_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:textSize="24sp"/>
+
+
     <ListView
         android:id="@+id/feed_list"
         android:layout_height="wrap_content"
