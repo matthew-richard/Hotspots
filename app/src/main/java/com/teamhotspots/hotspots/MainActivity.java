@@ -103,7 +103,8 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_home) {
             fragmentClass = MapHome.class;
         } else if (id == R.id.nav_new_pin) {
-            //launch new pin Activity
+            Intent intent = new Intent(this, NewPostActivity.class);
+            startActivity(intent);
         } else if (id == R.id.nav_statistics) {
             fragmentClass = Statistics.class;
         } else if (id == R.id.nav_settings) {
@@ -121,8 +122,10 @@ public class MainActivity extends AppCompatActivity
         }
 
         // Insert the fragment by replacing any existing fragment
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
+        if (fragmentClass != null) {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
+        }
 
         // Highlight the selected item has been done by NavigationView
         item.setChecked(true);
@@ -161,5 +164,11 @@ public class MainActivity extends AppCompatActivity
         }
 
         return;
+    }
+
+    // launch new post activity
+    public void launchPost(View view) {
+        Intent intent = new Intent(this, NewPostActivity.class);
+        startActivity(intent);
     }
 }
