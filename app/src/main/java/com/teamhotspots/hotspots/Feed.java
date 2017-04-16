@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.DisplayMetrics;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -66,7 +67,8 @@ public class Feed extends Fragment {
         posts.add(new Post("Kathleen", "This is a really really really really really really really " +
                 "really really really really really really really really really really really really" +
                 " really really LONG post!", null));
-        posts.add(new Post("Kathleen", "Dog!", R.drawable.husky));
+        posts.add(new Post("PAWS", "Dogs at The Beach, 3 to 5 pm!", R.drawable.husky));
+        posts.add(new Post("Hoot", "Look at this bird!", R.drawable.img_bird1));
     }
 
     @Override
@@ -117,9 +119,13 @@ public class Feed extends Fragment {
                 if (picture != null && p.isPicturePost()) {
                     picture.setBackgroundResource(p.getDrawable());
                     picture.setVisibility(View.VISIBLE);
+                    ViewGroup.LayoutParams params = picture.getLayoutParams();
+                    params.height = dpToPx(getActivity().getApplicationContext(), 200);
                 } else if (picture!= null && !p.isPicturePost()) {
                     picture.setVisibility(View.INVISIBLE);
                     picture.setBackgroundResource(0);
+                    ViewGroup.LayoutParams params = picture.getLayoutParams();
+                    params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
                 }
 
                 if (message != null) {
@@ -162,5 +168,10 @@ public class Feed extends Fragment {
             this.likes.setText("" + post.getNumLikes());
             this.pressed = !this.pressed;
         }
+    }
+
+    public static int dpToPx(Context context, int dp) {
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 }
