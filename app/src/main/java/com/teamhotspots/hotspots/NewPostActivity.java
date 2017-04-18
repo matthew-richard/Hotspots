@@ -19,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -108,6 +109,14 @@ public class NewPostActivity extends AppCompatActivity {
             View rootView = inflater.inflate(R.layout.fragment_new_post, container, false);
             EditText et = (EditText) rootView.findViewById(R.id.postText);
             et.setSelection(et.getText().length());
+
+            final Button button_cancel = (Button) rootView.findViewById(R.id.cancel);
+            button_cancel.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    getActivity().finish();
+                }
+            });
+
             return rootView;
         }
     }
@@ -135,6 +144,13 @@ public class NewPostActivity extends AppCompatActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_photo, container, false);
+
+            final Button button_cancel = (Button) rootView.findViewById(R.id.button2);
+            button_cancel.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    getActivity().finish();
+                }
+            });
             return rootView;
         }
     }

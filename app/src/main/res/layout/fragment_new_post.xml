@@ -22,7 +22,7 @@
         android:inputType="textMultiLine"
         android:paddingLeft="5dp"
         android:paddingTop="5dp"
-        android:text="WOOHOO! My first text post!" />
+        android:hint="Enter message here:" />
 
     <TextView
         android:id="@+id/textView2"
