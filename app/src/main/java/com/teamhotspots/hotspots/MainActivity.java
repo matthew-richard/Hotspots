@@ -97,12 +97,14 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         Fragment fragment = null;
         Class fragmentClass = null;
+        boolean newActivityStarted = false;
 
         if (id == R.id.nav_home) {
             fragmentClass = MapHome.class;
         } else if (id == R.id.nav_new_pin) {
             Intent intent = new Intent(this, NewPostActivity.class);
             startActivity(intent);
+            newActivityStarted = true;
         } else if (id == R.id.nav_statistics) {
             fragmentClass = Statistics.class;
         } else if (id == R.id.nav_settings) {
@@ -127,7 +129,9 @@ public class MainActivity extends AppCompatActivity
         // Close the navigation drawer
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
-        return true;
+
+        // Don't display navigation item as selected if a new activity was started
+        return !newActivityStarted;
     }
 
     @Override
@@ -163,12 +167,5 @@ public class MainActivity extends AppCompatActivity
     public void launchPost(View view) {
         Intent intent = new Intent(this, NewPostActivity.class);
         startActivity(intent);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        navigationView.getMenu().getItem(0).setChecked(true);
     }
 }
