@@ -73,7 +73,7 @@ public class Feed extends Fragment {
                 "really really really really really really really really really really really really" +
                 " really really LONG post!", null));
         posts.add(new Post("PAWS", "Dogs at The Beach, 3 to 5 pm!", R.drawable.husky));
-        posts.add(new Post("Hoot", "Look at this bird!", R.drawable.img_bird1));
+        posts.add(new Post("Hoot", "Look at this bird!", R.drawable.bird_ockatiel));
     }
 
     @Override

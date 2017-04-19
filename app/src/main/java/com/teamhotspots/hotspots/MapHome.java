@@ -23,6 +23,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.Toolbar;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +41,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private GoogleMap mMap;
+    private static View mapView;
 
     public MapHome() {
         // Required empty public constructor
@@ -55,7 +57,17 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_map_home, container, false);
+        if (mapView != null) {
+            ViewGroup parent = (ViewGroup) mapView.getParent();
+            if (parent != null)
+                parent.removeView(mapView);
+        }
+        try {
+            mapView = inflater.inflate(R.layout.fragment_map_home, container, false);
+        } catch (InflateException e) {
+            /* map is already there, just return view as it is */
+        }
+
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -64,8 +76,7 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
         toolbar.setTitle("Home");
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
         navigationView.getMenu().getItem(0).setChecked(true);
-
-        return view;
+        return mapView;
     }
 
     @Override
