@@ -60,8 +60,6 @@ public class MainActivity extends AppCompatActivity
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
 
-        //set nav drawer and title
-        navigationView.getMenu().getItem(0).setChecked(true);
         setTitle("Home");
     }
 
@@ -167,4 +165,10 @@ public class MainActivity extends AppCompatActivity
         startActivity(intent);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        navigationView.getMenu().getItem(0).setChecked(true);
+    }
 }
