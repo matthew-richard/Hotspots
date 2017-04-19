@@ -67,6 +67,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
+        if (getFragmentManager().getBackStackEntryCount() > 0) {
+            getFragmentManager().popBackStack();
+        }
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
@@ -166,4 +170,5 @@ public class MainActivity extends AppCompatActivity
         Intent intent = new Intent(this, NewPostActivity.class);
         startActivity(intent);
     }
+
 }

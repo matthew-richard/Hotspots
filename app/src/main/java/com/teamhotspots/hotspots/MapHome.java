@@ -87,12 +87,12 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
 
         MarkerOptions marker2 = new MarkerOptions().position(new LatLng(39.329159, -76.618424)).title("hotspot");
         Bitmap ic2 = getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_whatshot);
-        Bitmap resized_ic2 = Bitmap.createScaledBitmap(ic2, 250, 250, false);
+        Bitmap resized_ic2 = Bitmap.createScaledBitmap(ic2, 200, 200, false);
         marker2.icon(BitmapDescriptorFactory.fromBitmap(resized_ic2));
 
         MarkerOptions marker3 = new MarkerOptions().position(new LatLng(39.326702, -76.620296)).title("hotspot2");
         Bitmap ic3 = getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_whatshot);
-        Bitmap resized_ic3 = Bitmap.createScaledBitmap(ic3, 250, 250, false);
+        Bitmap resized_ic3 = Bitmap.createScaledBitmap(ic3, 200, 200, false);
         marker3.icon(BitmapDescriptorFactory.fromBitmap(resized_ic3));
 
         mMap.addMarker(marker);
