@@ -48,17 +48,9 @@ public class MainActivity extends AppCompatActivity
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        Fragment fragment = null;
-        Class fragmentClass = MapHome.class;
-        try {
-            fragment = (Fragment) fragmentClass.newInstance();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, new MapHome()).commit();
 
         setTitle("Home");
     }
@@ -98,9 +90,11 @@ public class MainActivity extends AppCompatActivity
         Fragment fragment = null;
         Class fragmentClass = null;
         boolean newActivityStarted = false;
+        boolean addToBackStack = true;
 
         if (id == R.id.nav_home) {
             fragmentClass = MapHome.class;
+            addToBackStack = false;
         } else if (id == R.id.nav_new_pin) {
             Intent intent = new Intent(this, NewPostActivity.class);
             startActivity(intent);
@@ -119,11 +113,17 @@ public class MainActivity extends AppCompatActivity
 
         // Insert the fragment by replacing any existing fragment
         if (fragmentClass != null) {
-            item.setChecked(true);
             setTitle(item.getTitle());
 
             FragmentManager fragmentManager = getSupportFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
+            if (addToBackStack) {
+                fragmentManager.beginTransaction().replace(R.id.content_frame, fragment)
+                        .addToBackStack(fragmentClass.getName()).commit();
+            }
+            else {
+                // Pop entire back stack (only occurs when when "home" is selected)
+                fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            }
         }
 
         // Close the navigation drawer
