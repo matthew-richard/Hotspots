@@ -20,5 +20,6 @@
         android:layout_height="wrap_content"
         android:background="#e2135a"
         app:tabIndicatorColor="#000000"
-        app:tabSelectedTextColor="#ffffff"></android.support.design.widget.TabLayout>
+        app:tabSelectedTextColor="#ffffff"/>
+
 </android.support.design.widget.CoordinatorLayout>

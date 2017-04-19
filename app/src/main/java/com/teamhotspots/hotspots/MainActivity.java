@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity
 
     /* For requesting location permissions at runtime */
     public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-
+    private NavigationView navigationView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         Fragment fragment = null;
@@ -110,10 +110,6 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_settings) {
             fragmentClass = Settings.class;
         }
-        // TODO: Delete this test code
-        else if (id == R.id.nav_feed) {
-            fragmentClass = Feed.class;
-        }
 
         try {
             fragment = (Fragment) fragmentClass.newInstance();
@@ -123,13 +119,12 @@ public class MainActivity extends AppCompatActivity
 
         // Insert the fragment by replacing any existing fragment
         if (fragmentClass != null) {
+            item.setChecked(true);
+            setTitle(item.getTitle());
+
             FragmentManager fragmentManager = getSupportFragmentManager();
             fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
         }
-
-        // Highlight the selected item has been done by NavigationView
-        item.setChecked(true);
-        setTitle(item.getTitle());
 
         // Close the navigation drawer
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

@@ -33,7 +33,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/stat_total_pts"
                 android:layout_weight="0.5"
-                android:textSize="24sp" />
+                android:textSize="20sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -57,7 +57,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/stat_total_posts"
                 android:layout_weight="0.5"
-                android:textSize="24sp" />
+                android:textSize="20sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -81,7 +81,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/stat_hotspots"
                 android:layout_weight="0.5"
-                android:textSize="24sp" />
+                android:textSize="20sp" />
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>

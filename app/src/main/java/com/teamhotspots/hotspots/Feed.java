@@ -5,7 +5,9 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -38,6 +40,9 @@ public class Feed extends Fragment {
         super.onCreate(savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_feed,
                 container, false);
+
+        Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+        toolbar.setTitle("Feed");
 
         generatePosts();
         postsListView = (ListView) view.findViewById(R.id.feed_list);
@@ -158,15 +163,16 @@ public class Feed extends Fragment {
         @Override
         public void onClick(View view) {
             if (!pressed) {
+                this.pressed = true;
                 post.upvote();
                 thumbIcon.setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_ATOP);
             } else {
+                this.pressed = false;
                 post.undoVote();
                 thumbIcon.clearColorFilter();
             }
 
             this.likes.setText("" + post.getNumLikes());
-            this.pressed = !this.pressed;
         }
     }
 

@@ -2,6 +2,7 @@ package com.teamhotspots.hotspots;
 
 import android.app.ActionBar;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.PagerAdapter;
@@ -9,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import android.support.v4.app.Fragment;
+//import android.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -21,6 +23,7 @@ import android.view.ViewGroup;
 
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class NewPostActivity extends AppCompatActivity {
@@ -44,7 +47,6 @@ public class NewPostActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_post);
-
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -151,6 +153,66 @@ public class NewPostActivity extends AppCompatActivity {
                     getActivity().finish();
                 }
             });
+
+            LinearLayout camera = (LinearLayout) rootView.findViewById (R.id.linearLayout);
+            camera.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //go to photo confirm
+                }
+            });
+
+            LinearLayout gallery = (LinearLayout) rootView.findViewById (R.id.linearLayout2);
+            gallery.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //go to photo confirm
+                }
+            });
+
+            return rootView;
+        }
+    }
+
+
+    public static class PhotoConfirmFragment extends Fragment {
+        /**
+         * The fragment argument representing the section number for this
+         * fragment.
+         */
+        private static final String ARG_SECTION_NUMBER = "section_number";
+
+        public PhotoConfirmFragment() {
+        }
+
+        /**
+         * Returns a new instance of this fragment for the given section
+         * number.
+         */
+        public static PhotoConfirmFragment newInstance() {
+            PhotoConfirmFragment fragment = new PhotoConfirmFragment();
+            return fragment;
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.fragment_photo_confirm, container, false);
+
+            final Button button_cancel = (Button) rootView.findViewById(R.id.cancel);
+            button_cancel.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    getActivity().finish();
+                }
+            });
+
+            final Button button_submit = (Button) rootView.findViewById(R.id.submit);
+            button_submit.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    getActivity().finish();
+                }
+            });
+
             return rootView;
         }
     }
