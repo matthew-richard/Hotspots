@@ -115,10 +115,17 @@ public class Feed extends Fragment {
             if (p != null) {
                 TextView username = (TextView) view.findViewById(R.id.username);
                 ImageView picture = (ImageView) view.findViewById(R.id.picture);
+                ImageView icon = (ImageView) view.findViewById(R.id.user_icon);
                 TextView message = (TextView) view.findViewById(R.id.message);
                 TextView likes = (TextView) view.findViewById(R.id.likes);
                 if (username != null) {
                     username.setText(p.getUsername());
+                }
+
+                if (icon != null && p.getUsername().equals(getString(R.string.anonymous))) {
+                    icon.setImageResource(R.drawable.ic_person_outline_black_24dp);
+                } else if (icon != null && !p.getUsername().equals(getString(R.string.anonymous))) {
+                    icon.setImageResource(R.drawable.img_bird1);
                 }
 
                 if (picture != null && p.isPicturePost()) {
