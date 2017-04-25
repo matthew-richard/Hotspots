@@ -2,6 +2,7 @@ package com.teamhotspots.hotspots;
 
 import android.*;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity
         implements OnRequestPermissionsResultCallback,
@@ -69,6 +71,13 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+
+        // fetch username for nav drawer
+        SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
+        String username = sharedPref.getString(getString(R.string.username), "John Doe");
+        TextView usernameTV = (TextView) findViewById(R.id.username);
+        usernameTV.setText(username);
+
         return true;
     }
 

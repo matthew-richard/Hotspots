@@ -1,6 +1,7 @@
 package com.teamhotspots.hotspots;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -10,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 
@@ -52,6 +54,8 @@ public class Settings extends Fragment {
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
         navigationView.getMenu().getItem(3).setChecked(true);
 
+        final EditText et = (EditText) rootView.findViewById(R.id.set_user_enter);
+
         final Button button_cancel = (Button) rootView.findViewById(R.id.settings_btn_cancel);
         button_cancel.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -62,7 +66,11 @@ public class Settings extends Fragment {
         final Button button_save = (Button) rootView.findViewById(R.id.settings_btn_save);
         button_save.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Toast.makeText(getActivity(), "Settings Saved",
+                SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putString(getString(R.string.username), et.getText().toString());
+                editor.commit();
+                Toast.makeText(getActivity(), "Settings saved, restart app to take effect.",
                         Toast.LENGTH_LONG).show();
             }
         });

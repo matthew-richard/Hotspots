@@ -13,4 +13,5 @@
     <string name="title_activity_new_pin">NewPin</string>
     <string name="section_format">Hello World from section: %1$d</string>
     <string name="anonymous">Anonymous</string>
+    <string name="username">USERNAME</string>
 </resources>
