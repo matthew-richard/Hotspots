@@ -5,12 +5,15 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+
+import java.io.IOException;
 
 import static java.lang.System.exit;
 
@@ -36,9 +39,6 @@ public class PhotoConfirm extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             path = getArguments().getParcelable("path");
-            //photo = BitmapFactory.decodeByteArray(
-            //        getArguments().getByteArray("byteArray"), 0 , getArguments()
-            //                .getByteArray("byteArray").length);
         } else {
             exit(1);
         }
@@ -53,7 +53,13 @@ public class PhotoConfirm extends Fragment {
         rootView.setBackgroundColor(getResources().getColor(R.color.white));
 
         ImageView photoView = (ImageView) rootView.findViewById(R.id.imageView6);
-        //photoView.setImageBitmap(photo);
+        /*try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), path);
+        } catch (IOException exception) {
+
+        }
+        photoView.setImageBitmap(photo);
+        */
         photoView.setImageURI(path);
 
         final Button button_cancel = (Button) rootView.findViewById(R.id.cancel);
