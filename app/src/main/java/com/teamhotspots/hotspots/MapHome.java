@@ -37,6 +37,13 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.TileOverlay;
+import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.android.gms.maps.model.TileProvider;
+import com.google.android.gms.maps.model.UrlTileProvider;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
@@ -113,6 +120,7 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
         // Set a listener for marker click.
         mMap.setOnMarkerClickListener(this);
     }
+
 
     @Override
     public boolean onMarkerClick(final Marker marker) {

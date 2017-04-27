@@ -2,9 +2,12 @@ package com.teamhotspots.hotspots;
 
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
@@ -34,6 +37,7 @@ public class Feed extends Fragment {
     private ListView postsListView;
     private List<Post> posts = new ArrayList<Post>();
     private PostAdapter adapter;
+    private Post itemSelected;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -58,6 +62,7 @@ public class Feed extends Fragment {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
                 Post p = (Post) postsListView.getItemAtPosition(position);
+                itemSelected = p;
                 if (p.isPicturePost()) postsListView.showContextMenu();
                 return true;
             }
@@ -86,6 +91,9 @@ public class Feed extends Fragment {
     @Override
     public boolean onContextItemSelected(MenuItem item){
         if (item.getTitle()=="Save to Gallery"){
+            //need to get image bitmap, need to pull image from entry
+            Bitmap icon = BitmapFactory.decodeResource(getActivity().getApplicationContext().getResources(), itemSelected.getDrawable());
+            MediaStore.Images.Media.insertImage(getActivity().getContentResolver(), icon, null , null);
             Toast.makeText(getActivity().getApplicationContext(),"Saved to gallery!",Toast.LENGTH_LONG).show();
         } else {
             return false;
