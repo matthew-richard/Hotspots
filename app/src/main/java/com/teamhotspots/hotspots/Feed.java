@@ -48,7 +48,7 @@ public class Feed extends Fragment {
         Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
         toolbar.setTitle("Feed");
 
-        generatePosts();
+        // generatePosts();
         postsListView = (ListView) view.findViewById(R.id.feed_list);
         adapter = new PostAdapter(getActivity(), R.layout.post, posts);
         postsListView.setAdapter(adapter);
@@ -70,16 +70,16 @@ public class Feed extends Fragment {
 
         return view;
     }
-
+/*
     private void generatePosts() {
-        posts.add(new Post(getString(R.string.anonymous), "My first post!", null));
-        posts.add(new Post("Kathleen", "My second post!", null));
+        posts.add(new Post(getString(R.string.anonymous), "My first post!"));
+        posts.add(new Post("Kathleen", "My second post!"));
         posts.add(new Post("Kathleen", "This is a really really really really really really really " +
                 "really really really really really really really really really really really really" +
-                " really really LONG post!", null));
-        posts.add(new Post("PAWS", "Dogs at The Beach, 3 to 5 pm!", R.drawable.husky));
-        posts.add(new Post("Hoot", "Look at this bird!", R.drawable.bird_ockatiel));
-    }
+                " really really LONG post!"));
+        posts.add(new Post("PAWS", "Dogs at The Beach, 3 to 5 pm!"));
+        posts.add(new Post("Hoot", "Look at this bird!"));
+    }*/
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
@@ -92,8 +92,9 @@ public class Feed extends Fragment {
     public boolean onContextItemSelected(MenuItem item){
         if (item.getTitle()=="Save to Gallery"){
             //need to get image bitmap, need to pull image from entry
-            Bitmap icon = BitmapFactory.decodeResource(getActivity().getApplicationContext().getResources(), itemSelected.getDrawable());
-            MediaStore.Images.Media.insertImage(getActivity().getContentResolver(), icon, null , null);
+            // TODO: implement this
+            /*Bitmap icon = BitmapFactory.decodeResource(getActivity().getApplicationContext().getResources(), itemSelected.getDrawable());
+            MediaStore.Images.Media.insertImage(getActivity().getContentResolver(), icon, null , null);*/
             Toast.makeText(getActivity().getApplicationContext(),"Saved to gallery!",Toast.LENGTH_LONG).show();
         } else {
             return false;
@@ -130,14 +131,15 @@ public class Feed extends Fragment {
                     username.setText(p.getUsername());
                 }
 
-                if (icon != null && p.getUsername().equals(getString(R.string.anonymous))) {
+                if (icon != null && (p.getUsername().equals(getString(R.string.anonymous)))) {
                     icon.setImageResource(R.drawable.ic_person_outline_black_24dp);
                 } else if (icon != null && !p.getUsername().equals(getString(R.string.anonymous))) {
                     icon.setImageResource(R.drawable.img_bird1);
                 }
 
                 if (picture != null && p.isPicturePost()) {
-                    picture.setBackgroundResource(p.getDrawable());
+                    // TODO: Implement this
+                    // picture.setBackgroundResource(p.getDrawable());
                     picture.setVisibility(View.VISIBLE);
                     ViewGroup.LayoutParams params = picture.getLayoutParams();
                     params.height = dpToPx(getActivity().getApplicationContext(), 200);

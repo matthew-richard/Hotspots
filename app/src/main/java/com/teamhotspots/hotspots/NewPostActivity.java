@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -33,10 +34,17 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Switch;
+
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static android.provider.MediaStore.AUTHORITY;
 import static java.lang.System.exit;
@@ -44,8 +52,10 @@ import static java.lang.System.exit;
 public class NewPostActivity extends AppCompatActivity implements
         PhotoConfirm.OnFragmentInteractionListener
 {
-
+    private static DatabaseReference mDatabase;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
+
+    private static SharedPreferences sharedPref;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -64,6 +74,9 @@ public class NewPostActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_post);
+
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        sharedPref = getPreferences(MODE_PRIVATE);
 
         Window window = getWindow();
         window.setStatusBarColor(ContextCompat.getColor(this , R.color.black));
@@ -101,8 +114,8 @@ public class NewPostActivity extends AppCompatActivity implements
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_new_post, container, false);
-            EditText et = (EditText) rootView.findViewById(R.id.postText);
+            final View rootView = inflater.inflate(R.layout.fragment_new_post, container, false);
+            final EditText et = (EditText) rootView.findViewById(R.id.postText);
             et.setSelection(et.getText().length());
 
             final Button button_cancel = (Button) rootView.findViewById(R.id.cancel);
@@ -121,6 +134,21 @@ public class NewPostActivity extends AppCompatActivity implements
                     //text field
                     //current location and which square it would map to
                     //time created
+                    String username = sharedPref.getString(getString(R.string.username),
+                            getString(R.string.anonymous));
+
+                    Switch sw = (Switch) rootView.findViewById(R.id.switch1);
+                    if (!sw.isChecked()) {
+                        username = getString(R.string.anonymous);
+                    }
+
+                    String msg = et.getText().toString();
+                    String imageUrl = null;
+                    String userIcon = null;
+                    String timeStamp = new Date().toString();
+                    double lat = 39.3262759;
+                    double lng = -76.6208668;
+                    writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp, lat, lng));
 
                     //return to previous activity
                     getActivity().finish();
@@ -128,6 +156,16 @@ public class NewPostActivity extends AppCompatActivity implements
             });
 
             return rootView;
+        }
+
+        public void writeNewPost(Post post) {
+            String key = mDatabase.child("posts").push().getKey();
+            Map<String, Object> postValues = post.toMap();
+
+            Map<String, Object> childUpdates = new HashMap<>();
+            childUpdates.put("/posts/" + key, postValues);
+
+            mDatabase.updateChildren(childUpdates);
         }
     }
 
@@ -330,5 +368,4 @@ public class NewPostActivity extends AppCompatActivity implements
     public void onFragmentInteraction(Uri uri) {
         //leave empty
     }
-
 }

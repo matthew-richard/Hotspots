@@ -1,5 +1,8 @@
 package com.teamhotspots.hotspots;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by Kathleen on 4/7/2017.
  */
@@ -7,13 +10,22 @@ package com.teamhotspots.hotspots;
 public class Post {
     private String username;
     private String msg;
-    private Integer drawable;    // TODO: Figure out a better way to store this
+    private String imageUrl;
+    private String userIcon;
     private int numLikes;
+    private String timeStamp;
+    private double lat;
+    private double lng;
 
-    public Post(String username, String msg, Integer drawable) {
+    public Post(String username, String msg, String imageUrl, String userIcon,
+                String timeStamp, double lat, double lng) {
         this.username = username;
         this.msg = msg;
-        this.drawable = drawable;
+        this.imageUrl = imageUrl;
+        this.userIcon = userIcon;
+        this.timeStamp = timeStamp;
+        this.lat = lat;
+        this.lng = lng;
         this.numLikes = 0;
     }
 
@@ -33,14 +45,6 @@ public class Post {
         this.msg = msg;
     }
 
-    public Integer getDrawable() {
-        return drawable;
-    }
-
-    public void setDrawable(Integer drawable) {
-        this.drawable = drawable;
-    }
-
     public int getNumLikes() {
         return this.numLikes;
     }
@@ -51,5 +55,27 @@ public class Post {
 
     public void undoVote() { this.numLikes--; }
 
-    public boolean isPicturePost() { return drawable != null; }
+    public boolean isPicturePost() { return imageUrl != null; }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public Map<String, Object> toMap() {
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("username", username);
+        result.put("msg", msg);
+        result.put("imageUrl", imageUrl);
+        result.put("userIcon", userIcon);
+        result.put("numLikes", numLikes);
+        result.put("timeStamp", timeStamp);
+        result.put("lat", lat);
+        result.put("lng", lng);
+
+        return result;
+    }
 }
