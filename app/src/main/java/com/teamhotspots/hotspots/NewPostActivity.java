@@ -132,7 +132,7 @@ public class NewPostActivity extends AppCompatActivity implements
                     //username, or anonymous
                     //user icon
                     //text field
-                    //current location and which square it would map to
+                    //current location
                     //time created
                     String username = sharedPref.getString(getString(R.string.username),
                             getString(R.string.anonymous));
