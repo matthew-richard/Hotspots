@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "480710763003",
+    "firebase_url": "https://hotspots-cd904.firebaseio.com",
+    "project_id": "hotspots-cd904",
+    "storage_bucket": "hotspots-cd904.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480710763003:android:56e9d300b12e4b9b",
+        "android_client_info": {
+          "package_name": "com.teamhotspots.hotspots"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "480710763003-lh9k9sm0nc07p6h2revasm3tsqh583pc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-qS2LKDI_5O0s1da9utEZmHkJZm1ZJb0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
