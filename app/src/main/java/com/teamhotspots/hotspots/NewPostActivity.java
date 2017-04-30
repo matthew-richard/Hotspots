@@ -1,12 +1,20 @@
 package com.teamhotspots.hotspots;
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.PagerAdapter;
 import android.support.v7.app.AppCompatActivity;
 
@@ -27,12 +35,17 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 
+import static android.provider.MediaStore.AUTHORITY;
 import static java.lang.System.exit;
 
 public class NewPostActivity extends AppCompatActivity implements
         PhotoConfirm.OnFragmentInteractionListener
 {
+
+    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -127,6 +140,7 @@ public class NewPostActivity extends AppCompatActivity implements
         static final int REQUEST_IMAGE_PICKER = 2;
 
         private View mView;
+        Uri mPhotoUri;
 
         public PhotoFragment() {
         }
@@ -158,9 +172,10 @@ public class NewPostActivity extends AppCompatActivity implements
                 @Override
                 public void onClick(View v) {
                     Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-                            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-                        }
+                    mPhotoUri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                            new ContentValues());
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mPhotoUri);
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
                 }
             });
 
@@ -172,9 +187,6 @@ public class NewPostActivity extends AppCompatActivity implements
                     Intent intent = new Intent(Intent.ACTION_PICK,
                             MediaStore.Images.Media.INTERNAL_CONTENT_URI);
                     intent.setType("image/*");
-
-                    //Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                    //photoPickerIntent.setType("image/*");
                     startActivityForResult(intent, REQUEST_IMAGE_PICKER);
                 }
             });
@@ -200,35 +212,37 @@ public class NewPostActivity extends AppCompatActivity implements
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
 
             if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-                Uri selectedImageUri = data.getData();
-
+                //Uri selectedImageUri = data.getData();
                 Bundle args = new Bundle();
-                args.putParcelable("path", selectedImageUri);
-
-                //Bitmap photo = (Bitmap) data.getExtras().get("data");
-                //ByteArrayOutputStream bs = new ByteArrayOutputStream();
-                //photo.compress(Bitmap.CompressFormat.JPEG, 100, bs);
-                //Bundle args = new Bundle();
-                //args.putByteArray("byteArray", bs.toByteArray());
+                args.putParcelable("path", mPhotoUri);
 
                 fragment.setArguments(args);
                 fragmentManager.beginTransaction().replace(R.id.main_content, fragment).addToBackStack(null).commit();
 
             } else if (requestCode == REQUEST_IMAGE_PICKER && resultCode == RESULT_OK) {
                 Uri selectedImageUri = data.getData();
-
                 Bundle args = new Bundle();
                 args.putParcelable("path", selectedImageUri);
-
                 fragment.setArguments(args);
                 fragmentManager.beginTransaction().replace(R.id.main_content, fragment).addToBackStack(null).commit();
 
             }
         }
 
+        public String getOriginalImagePath() {
+            String[] projection = { MediaStore.Images.Media.DATA };
+            Cursor cursor = getActivity().managedQuery(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    projection, null, null, null);
+            int column_index_data = cursor
+                    .getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToLast();
 
+            return cursor.getString(column_index_data);
+        }
 
     }
+
 
     public static class NewPostTab extends Fragment {
         private PagerAdapter pagerAdapter;

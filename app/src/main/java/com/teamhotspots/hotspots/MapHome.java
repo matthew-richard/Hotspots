@@ -35,6 +35,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
@@ -95,13 +96,29 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
         mMap.setIndoorEnabled(false);
         tryEnablingMyLocation();
 
-        LatLng classroom = new LatLng(39.327578, -76.619574);
-        MarkerOptions marker = new MarkerOptions().position(classroom).title("Hello Maps");
+        LatLng curr_location = new LatLng(39.327578, -76.619574); //get current location
+
+        MarkerOptions marker = new MarkerOptions().position(curr_location).title(null);
 
         Bitmap ic1 = getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_chat_black_24dp);
         Bitmap resized_ic1 = Bitmap.createScaledBitmap(ic1, 200, 200, false);
         marker.icon(BitmapDescriptorFactory.fromBitmap(resized_ic1));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(classroom));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(curr_location));
+
+        //populate map
+        //for each Hotspot, if within our map bounds, then create Hotspot marker
+
+        //for each Hotspot in Database, get lat/lng coordinates
+        float lat = 0;
+        float lng = 0;
+
+        LatLngBounds curScreen = mMap.getProjection()
+                .getVisibleRegion().latLngBounds;
+
+        /*
+        if (curScreen.contains(null)) {
+
+        }*/
 
         MarkerOptions marker2 = new MarkerOptions().position(new LatLng(39.329159, -76.618424)).title("hotspot");
         Bitmap ic2 = getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_whatshot);
@@ -125,6 +142,8 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
     @Override
     public boolean onMarkerClick(final Marker marker) {
         //go to feed
+
+        //get marker lat/lng
         Fragment fragment = null;
         Class fragmentClass = null;
 
