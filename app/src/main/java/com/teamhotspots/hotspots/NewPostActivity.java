@@ -119,7 +119,7 @@ public class NewPostActivity extends AppCompatActivity implements
                     //username, or anonymous
                     //user icon
                     //text field
-                    //current location and which square it would map to
+                    //current location
                     //time created
 
                     //return to previous activity

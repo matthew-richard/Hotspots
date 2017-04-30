@@ -115,8 +115,7 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
         LatLngBounds curScreen = mMap.getProjection()
                 .getVisibleRegion().latLngBounds;
 
-        /*
-        if (curScreen.contains(null)) {
+        /*if (curScreen.contains(mylatlng)) {
 
         }*/
 

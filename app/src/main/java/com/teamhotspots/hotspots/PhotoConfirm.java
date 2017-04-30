@@ -57,32 +57,24 @@ public class PhotoConfirm extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_photo_confirm, container, false);
         rootView.setBackgroundColor(getResources().getColor(R.color.white));
 
-        File myFile = new File(path.getPath());
         Bitmap bitmap = null;
+
         try {
             bitmap = MediaStore.Images.Media.getBitmap(getActivity().getApplicationContext().getContentResolver(), path);
         } catch (IOException exception) {
 
         }
-        try {
-            ExifInterface exif = new ExifInterface(myFile.getAbsolutePath());
-            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
-            Log.d("EXIF", "Exif: " + orientation);
-            Matrix matrix = new Matrix();
-            if (orientation == 6) {
-                matrix.postRotate(90);
-            }
-            else if (orientation == 3) {
-                matrix.postRotate(180);
-            }
-            else if (orientation == 8) {
-                matrix.postRotate(270);
-            }
-            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true); // rotating bitmap
-        }
-        catch (Exception e) {
 
-        }
+        int orientation = 0;
+
+        try {
+            ExifInterface exif = new ExifInterface(path.getPath());
+            orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+            Log.d("EXIF", "Exif: " + orientation);
+        } catch (Exception e) {}
+
+        bitmap = rotateImage(orientation, bitmap);
+
         ImageView photoView = (ImageView) rootView.findViewById(R.id.imageView6);
         //photoView.setImageURI(path);
         photoView.setImageBitmap(bitmap);
@@ -102,18 +94,45 @@ public class PhotoConfirm extends Fragment {
                 //user icon
                 //photo field
                 //text field (caption)
-                //current location and which square it would map to
                 //time created
+                //current location
 
                 //return to previous activity
                 getActivity().finish();
             }
         });
-
         return rootView;
-
     }
 
+
+    private int getImageOrientation(){
+        final String[] imageColumns = { MediaStore.Images.Media._ID, MediaStore.Images.ImageColumns.ORIENTATION };
+        final String imageOrderBy = MediaStore.Images.Media._ID+" DESC";
+        Cursor cursor = getContext().getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                imageColumns, null, null, imageOrderBy);
+
+        if(cursor.moveToFirst()){
+            int orientation = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.ImageColumns.ORIENTATION));
+            cursor.close();
+            return orientation;
+        } else {
+            return 0;
+        }
+    }
+
+    public Bitmap rotateImage(int orientation, Bitmap bitmap) {
+        Matrix matrix = new Matrix();
+        if (orientation == 6) {
+            matrix.postRotate(90);
+        }
+        else if (orientation == 3) {
+            matrix.postRotate(180);
+        }
+        else if (orientation == 8) {
+            matrix.postRotate(270);
+        }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true); // rotating bitmap
+    }
 
 
     public interface OnFragmentInteractionListener {
