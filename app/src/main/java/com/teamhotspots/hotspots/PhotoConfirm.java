@@ -193,7 +193,8 @@ public class PhotoConfirm extends Fragment {
                         writeNewPost(new Post(username, msg, imageUrl, usericon, timeStamp, lat, lng));
 
                         //to load onto feed
-                        //Picasso.with(getContext()).load(downloadUri).into(imageView);
+                        //URL myURL = new URL(imageUrl);
+                        //Picasso.with(getContext()).load(myURL).into(imageView);
                     }
                 });
 
@@ -214,6 +215,20 @@ public class PhotoConfirm extends Fragment {
 
         mDatabase.updateChildren(childUpdates);
     }
+
+    //TODO: write a Hotspot to database if this post has 5 posts that are <25 meters away
+    /*public void writeNewHotspot(Hotspot hotspot) {
+
+        String key = mDatabase.child("posts").push().getKey();
+        Map<String, Object> postValues = post.toMap();
+
+        Map<String, Object> childUpdates = new HashMap<>();
+        childUpdates.put("/posts/" + key, postValues);
+
+        mDatabase.updateChildren(childUpdates);
+
+    }*/
+
 
 
     private int getImageOrientation(){
