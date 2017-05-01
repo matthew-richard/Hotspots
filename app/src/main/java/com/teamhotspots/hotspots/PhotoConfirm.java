@@ -7,13 +7,17 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -27,6 +31,7 @@ import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -46,13 +51,21 @@ import static java.lang.System.exit;
 
 public class PhotoConfirm extends Fragment {
 
+    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private static DatabaseReference mDatabase;
     private static StorageReference mStorage;
     private static SharedPreferences sharedPref;
+    private boolean mLocationPermissionGranted = true;
     private View rootView;
     private Bitmap photo;
     private Uri path;
     private String imageUrl;
+    private double lng;
+    private double lat;
+    private String username;
+    private String usericon;
+    private String msg;
+    private String timeStamp;
 
     public PhotoConfirm() {
         // Required empty public constructor
@@ -122,37 +135,25 @@ public class PhotoConfirm extends Fragment {
                 //TODO: package all fields into a database entry and add to database
 
                 //username
-                String username = sharedPref.getString(getString(R.string.username),
+                username = sharedPref.getString(getString(R.string.username),
                         getString(R.string.anonymous));
 
                 //user icon
-                String userIcon = sharedPref.getString("userIcon",
+                usericon = sharedPref.getString("userIcon",
                         "anonymousIcon");
 
                 //anonymous or not
                 Switch sw = (Switch) rootView.findViewById(R.id.switch1);
-                if (!sw.isChecked()) {
+                if (sw.isChecked()) {
                     username = getString(R.string.anonymous);
-                    userIcon = "anonymousIcon";
+                    usericon = "anonymousIcon";
                 }
 
                 //caption
                 final EditText et = (EditText) rootView.findViewById(R.id.caption);
-                String msg = et.getText().toString();
+                msg = et.getText().toString();
 
-                //image
-                StorageReference filepath = mStorage.child("Photos").child(path.getLastPathSegment());
-                filepath.putFile(path).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        imageUrl = taskSnapshot.getDownloadUrl().toString();
-
-                        //to load onto feed
-                        //Picasso.with(getContext()).load(downloadUri).into(imageView);
-                    }
-                });
-
-                String timeStamp = new Date().toString();
+                timeStamp = new Date().toString();
 
                 if ( Build.VERSION.SDK_INT >= 23 &&
                         ContextCompat.checkSelfPermission( getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION )
@@ -160,12 +161,41 @@ public class PhotoConfirm extends Fragment {
 
                 }
 
-                LocationManager lm = (LocationManager)getActivity().getSystemService(Context.LOCATION_SERVICE);
-                Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                double lng = location.getLongitude();
-                double lat = location.getLatitude();
+                LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+                final LocationListener locationListener = new LocationListener() {
+                    @Override
+                    public void onLocationChanged(Location location) {
+                        lat = location.getLatitude();
+                        lng = location.getLongitude();
+                    }
+                    @Override
+                    public void onStatusChanged(String dks, int nds, Bundle fdksl) { }
 
-                writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp, lat, lng));
+                    @Override
+                    public void onProviderEnabled(String temp) { }
+
+                    @Override
+                    public void onProviderDisabled(String temp) { }
+
+                };
+                lm.requestLocationUpdates(
+                        LocationManager.NETWORK_PROVIDER, 5000, 10, locationListener);
+                Location location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                lng = location.getLongitude();
+                lat = location.getLatitude();
+
+                //image
+                StorageReference filepath = mStorage.child("Photos").child(path.getLastPathSegment());
+                filepath.putFile(path).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        imageUrl = taskSnapshot.getDownloadUrl().toString();
+                        writeNewPost(new Post(username, msg, imageUrl, usericon, timeStamp, lat, lng));
+
+                        //to load onto feed
+                        //Picasso.with(getContext()).load(downloadUri).into(imageView);
+                    }
+                });
 
                 //return to previous activity
                 getActivity().finish();
@@ -173,6 +203,7 @@ public class PhotoConfirm extends Fragment {
         });
         return rootView;
     }
+
 
     public void writeNewPost(Post post) {
         String key = mDatabase.child("posts").push().getKey();
