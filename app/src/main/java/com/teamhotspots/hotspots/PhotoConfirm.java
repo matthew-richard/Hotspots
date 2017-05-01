@@ -1,31 +1,49 @@
 package com.teamhotspots.hotspots;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Switch;
+
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import static android.content.Context.MODE_PRIVATE;
 import static java.lang.System.exit;
 
 
 public class PhotoConfirm extends Fragment {
 
+    private static DatabaseReference mDatabase;
+    private static SharedPreferences sharedPref;
+    private View rootView;
     private Bitmap photo;
     private Uri path;
 
@@ -43,6 +61,10 @@ public class PhotoConfirm extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        sharedPref = getActivity().getPreferences(MODE_PRIVATE);
+
         if (getArguments() != null) {
             path = getArguments().getParcelable("path");
         } else {
@@ -54,7 +76,7 @@ public class PhotoConfirm extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_photo_confirm, container, false);
+        rootView = inflater.inflate(R.layout.fragment_photo_confirm, container, false);
         rootView.setBackgroundColor(getResources().getColor(R.color.white));
 
         Bitmap bitmap = null;
@@ -97,11 +119,49 @@ public class PhotoConfirm extends Fragment {
                 //time created
                 //current location
 
+                String username = sharedPref.getString(getString(R.string.username),
+                        getString(R.string.anonymous));
+
+                Switch sw = (Switch) rootView.findViewById(R.id.switch1);
+                if (!sw.isChecked()) {
+                    username = getString(R.string.anonymous);
+                }
+                final EditText et = (EditText) rootView.findViewById(R.id.caption);
+
+                String msg = et.getText().toString();
+                String imageUrl = null;
+                String userIcon = null;
+                String timeStamp = new Date().toString();
+
+                if ( Build.VERSION.SDK_INT >= 23 &&
+                        ContextCompat.checkSelfPermission( getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION )
+                                != PackageManager.PERMISSION_GRANTED) {
+
+                }
+
+                LocationManager lm = (LocationManager)getActivity().getSystemService(Context.LOCATION_SERVICE);
+                Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                double lng = location.getLongitude();
+                double lat = location.getLatitude();
+
+                writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp, lat, lng));
+
+
                 //return to previous activity
                 getActivity().finish();
             }
         });
         return rootView;
+    }
+
+    public void writeNewPost(Post post) {
+        String key = mDatabase.child("posts").push().getKey();
+        Map<String, Object> postValues = post.toMap();
+
+        Map<String, Object> childUpdates = new HashMap<>();
+        childUpdates.put("/posts/" + key, postValues);
+
+        mDatabase.updateChildren(childUpdates);
     }
 
 
