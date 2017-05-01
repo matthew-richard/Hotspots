@@ -3,12 +3,16 @@ package com.teamhotspots.hotspots;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
@@ -35,6 +39,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -146,9 +151,16 @@ public class NewPostActivity extends AppCompatActivity implements
                     String imageUrl = null;
                     String userIcon = null;
                     String timeStamp = new Date().toString();
-                    double lat = 39.3262759;
-                    double lng = -76.6208668;
-                    writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp, lat, lng));
+
+                    LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+                    try {
+                        Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        double lat = location.getLatitude();
+                        double lng = location.getLongitude();
+                        writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp, lat, lng));
+                    } catch (SecurityException e) {
+                        Toast.makeText(getActivity(), "Should add location permission, post not uploaded.", Toast.LENGTH_LONG).show();
+                    }
 
                     //return to previous activity
                     getActivity().finish();

@@ -24,6 +24,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -38,6 +41,7 @@ public class Feed extends Fragment {
     private List<Post> posts = new ArrayList<Post>();
     private PostAdapter adapter;
     private Post itemSelected;
+    private DatabaseReference mReference;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -49,12 +53,18 @@ public class Feed extends Fragment {
         toolbar.setTitle("Feed");
 
         // generatePosts();
+        mReference = FirebaseDatabase.getInstance().getReference();
         postsListView = (ListView) view.findViewById(R.id.feed_list);
         adapter = new PostAdapter(getActivity(), R.layout.post, posts);
         postsListView.setAdapter(adapter);
 
         TextView community = (TextView) view.findViewById(R.id.community_name);
         community.setText("Johns Hopkins University");
+
+        Bundle b = getArguments();
+        String hotspotKey = b.getString("hotspotKey");
+        if (hotspotKey == null) hotspotKey = "example-hotspot";
+        // List<String> postKeys = mReference.child("hotspots").child("posts");
 
         registerForContextMenu(postsListView);
 
