@@ -111,10 +111,9 @@
 
             <ImageView
                 android:id="@+id/icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:layout_weight="1"
-                android:scaleType="fitCenter"
                 app:srcCompat="@drawable/img_bird1" />
         </LinearLayout>
 
@@ -122,13 +121,13 @@
             android:id="@+id/buttonLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="20dp"
             android:orientation="horizontal">
 
             <Button
                 android:id="@+id/settings_btn_cancel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
                 android:layout_marginRight="10dp"
                 android:layout_weight="0.5"
                 android:background="@drawable/button_cancel"
@@ -141,6 +140,7 @@
                 android:id="@+id/settings_btn_save"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
                 android:layout_marginLeft="10dp"
                 android:layout_weight="0.5"
                 android:background="@drawable/button_save"

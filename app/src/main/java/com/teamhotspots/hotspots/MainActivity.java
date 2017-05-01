@@ -4,6 +4,8 @@ import android.*;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -24,7 +26,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity
         implements OnRequestPermissionsResultCallback,
@@ -79,6 +84,14 @@ public class MainActivity extends AppCompatActivity
         // fetch username for nav drawer
         SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
         String username = sharedPref.getString(getString(R.string.username), "John Doe");
+        String iconPath = sharedPref.getString("ICON_PATH", "None");
+        if (!iconPath.equals("None")) {
+            System.out.println(iconPath);
+            ImageView userIcon = (ImageView) findViewById(R.id.user_icon);
+            File imgFile = new File(iconPath);
+            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+            userIcon.setImageBitmap(myBitmap);
+        }
         TextView usernameTV = (TextView) findViewById(R.id.username);
         usernameTV.setText(username);
 

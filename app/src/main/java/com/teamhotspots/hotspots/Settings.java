@@ -27,6 +27,7 @@ import android.widget.Toast;
 import java.io.IOException;
 
 import static android.app.Activity.RESULT_OK;
+import static android.content.Context.MODE_PRIVATE;
 
 
 /**
@@ -42,7 +43,6 @@ public class Settings extends Fragment {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_IMAGE_PICKER = 2;
     Uri mPhotoUri;
-    private Uri path;
 
     public Settings() {
         // Required empty public constructor
@@ -58,14 +58,6 @@ public class Settings extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            path = getArguments().getParcelable("path");
-        }
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -76,6 +68,10 @@ public class Settings extends Fragment {
         navigationView.getMenu().getItem(3).setChecked(true);
 
         final EditText et = (EditText) rootView.findViewById(R.id.set_user_enter);
+        SharedPreferences sharedPref = getActivity().getPreferences(MODE_PRIVATE);
+        String username = sharedPref.getString(getString(R.string.username), "John Doe");
+        et.setText(username);
+        et.setSelection(et.getText().length());
 
         final Button button_cancel = (Button) rootView.findViewById(R.id.settings_btn_cancel);
         button_cancel.setOnClickListener(new View.OnClickListener() {
@@ -87,12 +83,21 @@ public class Settings extends Fragment {
         final Button button_save = (Button) rootView.findViewById(R.id.settings_btn_save);
         button_save.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putString(getString(R.string.username), et.getText().toString());
-                editor.commit();
-                Toast.makeText(getActivity(), "Settings saved, restart app to take effect.",
-                        Toast.LENGTH_LONG).show();
+                if (et.getText().length() == 0) {
+                    Toast.makeText(getActivity(), "Username cannot be empty",
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    SharedPreferences sharedPref = getActivity().getPreferences(MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putString(getString(R.string.username), et.getText().toString());
+                    try {
+                        editor.putString("ICON_PATH", mPhotoUri.getPath());
+                    } catch (NullPointerException e) {
+                    }
+                    editor.commit();
+                    Toast.makeText(getActivity(), "Settings saved, restart app to take effect.",
+                            Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -119,18 +124,25 @@ public class Settings extends Fragment {
             }
         });
 
+        return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
         // try setting icon
         Bitmap bitmap = null;
         try {
             try {
-                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getApplicationContext().getContentResolver(), path);
+                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getApplicationContext().getContentResolver(), mPhotoUri);
             } catch (IOException exception) {
             }
 
             int orientation = 0;
 
             try {
-                ExifInterface exif = new ExifInterface(path.getPath());
+                ExifInterface exif = new ExifInterface(mPhotoUri.getPath());
                 orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
                 Log.d("EXIF", "Exif: " + orientation);
             } catch (Exception e) {
@@ -138,12 +150,11 @@ public class Settings extends Fragment {
 
             bitmap = rotateImage(orientation, bitmap);
 
-            ImageView photoView = (ImageView) rootView.findViewById(R.id.icon);
+            ImageView photoView = (ImageView) getView().findViewById(R.id.icon);
             //photoView.setImageURI(path);
+            System.out.println("here");
             photoView.setImageBitmap(bitmap);
         } catch (NullPointerException exception) {}
-
-        return rootView;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -186,34 +197,12 @@ public class Settings extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // go back to settings fragment
-        Fragment fragment = null;
-        Class fragmentClass;
-
-        fragmentClass = Settings.class;
-
-        try {
-            fragment = (Fragment) fragmentClass.newInstance();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
 
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             //Uri selectedImageUri = data.getData();
-            Bundle args = new Bundle();
-            args.putParcelable("path", mPhotoUri);
-
-            //fragment.setArguments(args);
-            //fragmentManager.beginTransaction().replace(R.id.main_content, fragment).addToBackStack(null).commit();
 
         } else if (requestCode == REQUEST_IMAGE_PICKER && resultCode == RESULT_OK) {
-            Uri selectedImageUri = data.getData();
-            Bundle args = new Bundle();
-            args.putParcelable("path", selectedImageUri);
-
-            //fragment.setArguments(args);
-            //fragmentManager.beginTransaction().replace(R.id.main_content, fragment).addToBackStack(null).commit();
+            mPhotoUri = data.getData();
         }
     }
     /**
