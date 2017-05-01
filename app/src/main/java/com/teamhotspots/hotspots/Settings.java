@@ -1,18 +1,32 @@
 package com.teamhotspots.hotspots;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import java.io.IOException;
+
+import static android.app.Activity.RESULT_OK;
 
 
 /**
@@ -25,6 +39,10 @@ import android.widget.Toast;
  */
 public class Settings extends Fragment {
     private OnFragmentInteractionListener mListener;
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+    static final int REQUEST_IMAGE_PICKER = 2;
+    Uri mPhotoUri;
+    private Uri path;
 
     public Settings() {
         // Required empty public constructor
@@ -42,6 +60,9 @@ public class Settings extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            path = getArguments().getParcelable("path");
+        }
     }
 
     @Override
@@ -74,6 +95,54 @@ public class Settings extends Fragment {
                         Toast.LENGTH_LONG).show();
             }
         });
+
+        final LinearLayout photoLayout = (LinearLayout) rootView.findViewById(R.id.photoLayout);
+        photoLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                mPhotoUri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        new ContentValues());
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mPhotoUri);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+        });
+
+        final LinearLayout galleryLayout = (LinearLayout) rootView.findViewById(R.id.galleryLayout);
+        galleryLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK,
+                        MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+                intent.setType("image/*");
+                startActivityForResult(intent, REQUEST_IMAGE_PICKER);
+            }
+        });
+
+        // try setting icon
+        Bitmap bitmap = null;
+        try {
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getApplicationContext().getContentResolver(), path);
+            } catch (IOException exception) {
+            }
+
+            int orientation = 0;
+
+            try {
+                ExifInterface exif = new ExifInterface(path.getPath());
+                orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+                Log.d("EXIF", "Exif: " + orientation);
+            } catch (Exception e) {
+            }
+
+            bitmap = rotateImage(orientation, bitmap);
+
+            ImageView photoView = (ImageView) rootView.findViewById(R.id.icon);
+            //photoView.setImageURI(path);
+            photoView.setImageBitmap(bitmap);
+        } catch (NullPointerException exception) {}
+
         return rootView;
     }
 
@@ -82,6 +151,20 @@ public class Settings extends Fragment {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
         }
+    }
+
+    public Bitmap rotateImage(int orientation, Bitmap bitmap) {
+        Matrix matrix = new Matrix();
+        if (orientation == 6) {
+            matrix.postRotate(90);
+        }
+        else if (orientation == 3) {
+            matrix.postRotate(180);
+        }
+        else if (orientation == 8) {
+            matrix.postRotate(270);
+        }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true); // rotating bitmap
     }
 
     @Override
@@ -101,6 +184,38 @@ public class Settings extends Fragment {
         mListener = null;
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // go back to settings fragment
+        Fragment fragment = null;
+        Class fragmentClass;
+
+        fragmentClass = Settings.class;
+
+        try {
+            fragment = (Fragment) fragmentClass.newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            //Uri selectedImageUri = data.getData();
+            Bundle args = new Bundle();
+            args.putParcelable("path", mPhotoUri);
+
+            //fragment.setArguments(args);
+            //fragmentManager.beginTransaction().replace(R.id.main_content, fragment).addToBackStack(null).commit();
+
+        } else if (requestCode == REQUEST_IMAGE_PICKER && resultCode == RESULT_OK) {
+            Uri selectedImageUri = data.getData();
+            Bundle args = new Bundle();
+            args.putParcelable("path", selectedImageUri);
+
+            //fragment.setArguments(args);
+            //fragmentManager.beginTransaction().replace(R.id.main_content, fragment).addToBackStack(null).commit();
+        }
+    }
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated

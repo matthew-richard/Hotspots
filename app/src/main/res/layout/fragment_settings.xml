@@ -6,164 +6,147 @@
     tools:context="com.teamhotspots.hotspots.Settings">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp">
+        android:layout_marginRight="20dp"
+        android:orientation="vertical">
 
         <TextView
-            android:text="Username:"
+            android:id="@+id/set_username"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/set_username"
-            android:textSize="24sp"
             android:layout_marginTop="30dp"
+            android:text="Username:"
+            android:textSize="24sp"
             android:textStyle="normal|bold" />
 
         <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textPersonName"
-            android:ems="10"
             android:id="@+id/set_user_enter"
-            android:hint="Enter username here"
-            android:background="@drawable/settings_edit_items"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
-            android:paddingLeft="10dp" />
+            android:layout_marginTop="10dp"
+            android:background="@drawable/settings_edit_items"
+            android:ems="10"
+            android:hint="Enter username here"
+            android:inputType="textPersonName"
+            android:paddingBottom="10dp"
+            android:paddingLeft="10dp"
+            android:paddingTop="10dp" />
 
         <TextView
-            android:text="Choose Icon:"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:id="@+id/set_icon"
-            android:textSize="24dp"
-            android:layout_marginTop="20dp"
-            android:textStyle="normal|bold" />
-
-        <LinearLayout
-            android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/set_icon_list">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:srcCompat="@drawable/img_bird2"
-                android:id="@+id/imageView3"
-                android:layout_weight="1"
-                android:adjustViewBounds="true"
-                android:maxWidth="75dp"
-                android:maxHeight="75dp"
-                android:scaleType="fitCenter" />
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:srcCompat="@drawable/img_bird5"
-                android:id="@+id/imageView5"
-                android:layout_weight="1"
-                android:adjustViewBounds="true"
-                android:maxWidth="75dp"
-                android:maxHeight="75dp"
-                android:scaleType="fitCenter"/>
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:srcCompat="@drawable/img_bird3"
-                android:id="@+id/imageView4"
-                android:layout_weight="1"
-                android:adjustViewBounds="true"
-                android:maxWidth="75dp"
-                android:maxHeight="75dp"
-                android:scaleType="fitCenter"/>
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:srcCompat="@drawable/img_bird1"
-                android:id="@+id/imageView2"
-                android:layout_weight="1"
-                android:adjustViewBounds="true"
-                android:maxWidth="75dp"
-                android:maxHeight="75dp"
-                android:scaleType="fitCenter"/>
-        </LinearLayout>
-
-        <TextView
-            android:text="Map View Radius:"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/set_map_view"
-            android:layout_marginTop="20dp"
+            android:text="Choose Icon:"
             android:textSize="24dp"
             android:textStyle="normal|bold" />
 
         <LinearLayout
-            android:orientation="horizontal"
+            android:id="@+id/photoLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:clickable="true"
+            android:orientation="horizontal">
 
-            <EditText
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:ems="10"
-                android:id="@+id/set_map_num"
-                android:layout_weight=".25"
-                android:hint="25"
-                android:gravity="center_vertical|center_horizontal"
-                android:background="@drawable/settings_edit_items"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp" />
+            <ImageView
+                android:id="@+id/imageView8"
+                android:layout_width="match_parent"
+                android:layout_height="75dp"
+                android:layout_weight="2"
+                android:clickable="false"
+                app:srcCompat="@drawable/ic_menu_camera" />
 
             <TextView
-                android:text="meters"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:id="@+id/set_map_meters"
-                android:layout_weight=".75"
-                android:textSize="18sp"
-                android:layout_gravity="center_vertical" />
+                android:id="@+id/textView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="false"
+                android:gravity="center_vertical"
+                android:text="Take a photo"
+                android:textColor="#000000"
+                android:textSize="18sp" />
+
         </LinearLayout>
 
         <LinearLayout
-            android:orientation="horizontal"
+            android:id="@+id/galleryLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:clickable="true"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/imageView9"
+                android:layout_width="match_parent"
+                android:layout_height="75dp"
+                android:layout_weight="2"
+                android:clickable="false"
+                android:paddingTop="0dp"
+                app:srcCompat="@drawable/ic_menu_gallery" />
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="false"
+                android:gravity="center_vertical"
+                android:text="Choose from gallery"
+                android:textColor="#000000"
+                android:textSize="18sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/iconLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:scaleType="fitCenter"
+                app:srcCompat="@drawable/img_bird1" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/buttonLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="20dp">
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
 
             <Button
-                android:text="CANCEL"
+                android:id="@+id/settings_btn_cancel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/settings_btn_cancel"
-                android:layout_weight="0.5"
-                android:textSize="24sp"
-                android:textColor="@color/white"
-                android:background="@drawable/button_cancel"
                 android:layout_marginRight="10dp"
+                android:layout_weight="0.5"
+                android:background="@drawable/button_cancel"
+                android:text="CANCEL"
+                android:textColor="@color/white"
+                android:textSize="24sp"
                 android:textStyle="normal|bold" />
 
             <Button
-                android:text="SAVE"
+                android:id="@+id/settings_btn_save"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/settings_btn_save"
-                android:background="@drawable/button_save"
-                android:textSize="24sp"
-                android:layout_weight="0.5"
-                android:textColor="@color/white"
                 android:layout_marginLeft="10dp"
+                android:layout_weight="0.5"
+                android:background="@drawable/button_save"
+                android:text="SAVE"
+                android:textColor="@color/white"
+                android:textSize="24sp"
                 android:textStyle="normal|bold" />
         </LinearLayout>
 
