@@ -24,9 +24,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Switch;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,10 +47,12 @@ import static java.lang.System.exit;
 public class PhotoConfirm extends Fragment {
 
     private static DatabaseReference mDatabase;
+    private static StorageReference mStorage;
     private static SharedPreferences sharedPref;
     private View rootView;
     private Bitmap photo;
     private Uri path;
+    private String imageUrl;
 
     public PhotoConfirm() {
         // Required empty public constructor
@@ -63,6 +70,7 @@ public class PhotoConfirm extends Fragment {
         super.onCreate(savedInstanceState);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        mStorage = FirebaseStorage.getInstance().getReference();
         sharedPref = getActivity().getPreferences(MODE_PRIVATE);
 
         if (getArguments() != null) {
@@ -112,25 +120,38 @@ public class PhotoConfirm extends Fragment {
         button_submit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 //TODO: package all fields into a database entry and add to database
-                //username, or anonymous
-                //user icon
-                //photo field
-                //text field (caption)
-                //time created
-                //current location
 
+                //username
                 String username = sharedPref.getString(getString(R.string.username),
                         getString(R.string.anonymous));
 
+                //user icon
+                String userIcon = sharedPref.getString("userIcon",
+                        "anonymousIcon");
+
+                //anonymous or not
                 Switch sw = (Switch) rootView.findViewById(R.id.switch1);
                 if (!sw.isChecked()) {
                     username = getString(R.string.anonymous);
+                    userIcon = "anonymousIcon";
                 }
-                final EditText et = (EditText) rootView.findViewById(R.id.caption);
 
+                //caption
+                final EditText et = (EditText) rootView.findViewById(R.id.caption);
                 String msg = et.getText().toString();
-                String imageUrl = null;
-                String userIcon = null;
+
+                //image
+                StorageReference filepath = mStorage.child("Photos").child(path.getLastPathSegment());
+                filepath.putFile(path).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        imageUrl = taskSnapshot.getDownloadUrl().toString();
+
+                        //to load onto feed
+                        //Picasso.with(getContext()).load(downloadUri).into(imageView);
+                    }
+                });
+
                 String timeStamp = new Date().toString();
 
                 if ( Build.VERSION.SDK_INT >= 23 &&
@@ -145,7 +166,6 @@ public class PhotoConfirm extends Fragment {
                 double lat = location.getLatitude();
 
                 writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp, lat, lng));
-
 
                 //return to previous activity
                 getActivity().finish();
