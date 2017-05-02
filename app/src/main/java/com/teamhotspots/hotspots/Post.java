@@ -17,6 +17,7 @@ public class Post {
     private double lat;
     private double lng;
 
+    public Post() {}
     public Post(String username, String msg, String imageUrl, String userIcon,
                 String timeStamp, double lat, double lng) {
         this.username = username;

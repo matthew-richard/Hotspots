@@ -45,7 +45,8 @@ public class MainActivity extends AppCompatActivity
     /* For requesting location permissions at runtime */
     public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private NavigationView navigationView;
-    private Uri icon;
+    private MapHome mapFragment;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,7 +76,8 @@ public class MainActivity extends AppCompatActivity
 
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, new MapHome()).commit();
+        mapFragment = new MapHome();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, mapFragment).commit();
 
         setTitle("Home");
     }
@@ -173,16 +175,11 @@ public class MainActivity extends AppCompatActivity
         // See https://developer.android.com/training/permissions/requesting.html
         switch (requestCode) {
             case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-                /* TODO: Call map fragment's tryEnablingMyLocation() */
-
-                /* if (grantResults.length > 0
+                if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 {
-
+                    mapFragment.tryEnablingMyLocation();
                 }
-                else {
-
-                } */
             }
         }
 
