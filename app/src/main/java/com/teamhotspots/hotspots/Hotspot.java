@@ -11,6 +11,7 @@ public class Hotspot {
     double lng;
     List<String> posts;
 
+    public Hotspot() {}
     public Hotspot(double lat, double lng, List<String> posts) {
         this.lat = lat;
         this.lng = lng;

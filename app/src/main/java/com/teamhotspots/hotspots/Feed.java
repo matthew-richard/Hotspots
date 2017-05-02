@@ -24,13 +24,18 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Kathleen on 4/7/2017.
@@ -55,18 +60,50 @@ public class Feed extends Fragment {
         // generatePosts();
         mReference = FirebaseDatabase.getInstance().getReference();
         postsListView = (ListView) view.findViewById(R.id.feed_list);
-        adapter = new PostAdapter(getActivity(), R.layout.post, posts);
-        postsListView.setAdapter(adapter);
 
         TextView community = (TextView) view.findViewById(R.id.community_name);
         community.setText("Johns Hopkins University");
 
-        Bundle b = getArguments();
-        String hotspotKey = b.getString("hotspotKey");
-        if (hotspotKey == null) hotspotKey = "example-hotspot";
-        // List<String> postKeys = mReference.child("hotspots").child("posts");
+        // TODO: Get hotspot key from bundled arguments
+        //Bundle b = getArguments();
+        //String hotspotKey = b.getString("hotspotKey");
+        String hotspotKey = "example-hotspot";
+        final List<String> postKeys = new ArrayList<String>();
 
-        registerForContextMenu(postsListView);
+        mReference.child("hotspots").child(hotspotKey).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Hotspot h = dataSnapshot.getValue(Hotspot.class);
+                postKeys.addAll(h.posts);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
+
+        mReference.child("posts").orderByKey().addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(String key: postKeys) {
+                    for (DataSnapshot d : dataSnapshot.getChildren()) {
+                        System.out.println(d.getKey());
+                        if (d.getKey().equals(key)) {
+                            Post p = d.getValue(Post.class);
+                            posts.add(p);
+                        }
+                    }
+                }
+
+                adapter = new PostAdapter(getActivity(), R.layout.post, posts);
+                postsListView.setAdapter(adapter);
+                registerForContextMenu(postsListView);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
         postsListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
