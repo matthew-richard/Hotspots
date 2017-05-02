@@ -11,10 +11,12 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.VectorDrawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -30,6 +32,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMapOptions;
@@ -44,14 +50,27 @@ import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.gms.maps.model.TileProvider;
 import com.google.android.gms.maps.model.UrlTileProvider;
+import com.google.android.gms.location.LocationServices;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
-public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+// TODO: Add button to UI for re-centering on current location
+
+public class MapHome extends Fragment
+        implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, LocationListener
+{
+    public static final int LOCATION_REQUEST_INTERVAL_SEC = 10;
+    public static final int LOCATION_REQUEST_FASTEST_INTERVAL_SEC = 3;
 
     private GoogleMap mMap;
+    private Location lastLocation;
+    private Marker locationMarker;
+    private ArrayList<Marker> hotspotMarkers;
+
     private static View mapView;
+    private static GoogleApiClient googleApiClient;
 
     public MapHome() {
         // Required empty public constructor
@@ -61,6 +80,87 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        /* Initialize googleApiClient */
+        if (googleApiClient == null) {
+            googleApiClient = new GoogleApiClient.Builder(getActivity())
+                .enableAutoManage(getActivity(), new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                        // TODO: handle Google Services API connection failure
+                    }
+                })
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(@Nullable Bundle bundle) {
+                        // Start requesting location updates once we've connected
+                        // to the Google Services API
+                        tryRequestingLocationUpdates();
+                    }
+
+                    @Override
+                    public void onConnectionSuspended(int i) {
+                        // TODO: handle Google Services API connection suspension
+                    }
+                })
+                .addApi(LocationServices.API)
+                .build();
+        }
+
+        locationMarker = null;
+        hotspotMarkers = new ArrayList<>();
+    }
+
+    public void tryRequestingLocationUpdates() {
+        try {
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+                    googleApiClient,
+                    new LocationRequest()
+                            .setInterval(LOCATION_REQUEST_INTERVAL_SEC * 1000)
+                            .setFastestInterval(LOCATION_REQUEST_FASTEST_INTERVAL_SEC * 1000)
+                            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY),
+                    this);
+            enablePermissionsErrorMessage(false);
+
+            // TODO: Pause location requests in onStop(), resume in onStart()
+            // Just make sure that only one location request is running at a time.
+        }
+        catch (SecurityException e) {
+            // Asynchronously request location permission.
+            // Callback is MainActivity.onRequestPermissionsResult
+            ActivityCompat.requestPermissions(getActivity(),
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    MainActivity.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+
+            enablePermissionsErrorMessage(true);
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        lastLocation = location;
+        LatLng latlng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+
+        // if marker doesn't exist, create it. otherwise move it.
+        if (locationMarker == null) {
+            Bitmap ic1 = getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_chat_black_24dp);
+            Bitmap resized_ic1 = Bitmap.createScaledBitmap(ic1, 200, 200, false);
+
+            locationMarker = mMap.addMarker(new MarkerOptions()
+                    .position(latlng)
+                    .title(null)
+                    .icon(BitmapDescriptorFactory.fromBitmap(resized_ic1))
+            );
+
+            // TODO: Add circle
+
+            // Center camera on the first location received
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
+        }
+        else {
+            locationMarker.setPosition(latlng);
+
+            // TODO: Update circle
+        }
     }
 
     @Override
@@ -96,16 +196,13 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
         // Map settings (besides those that are set in fragment_map_home.xml)
         mMap.setBuildingsEnabled(true);
         mMap.setIndoorEnabled(false);
-        tryEnablingMyLocation();
 
-        LatLng curr_location = new LatLng(39.327578, -76.619574); //get current location
+        // Set a listener for marker click.
+        mMap.setOnMarkerClickListener(this);
 
-        MarkerOptions marker = new MarkerOptions().position(curr_location).title(null);
-
-        Bitmap ic1 = getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_chat_black_24dp);
-        Bitmap resized_ic1 = Bitmap.createScaledBitmap(ic1, 200, 200, false);
-        marker.icon(BitmapDescriptorFactory.fromBitmap(resized_ic1));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(curr_location));
+        // Data markers:
+        // - Fetch all pins in local (relative to user) area, display in feed
+        // - Fetch all hotspots visible on the map (onMapCameraMove?), display on map, with radii
 
         //populate map
         //for each Hotspot, if within our map bounds, then create Hotspot marker
@@ -131,12 +228,10 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
         Bitmap resized_ic3 = Bitmap.createScaledBitmap(ic3, 200, 200, false);
         marker3.icon(BitmapDescriptorFactory.fromBitmap(resized_ic3));
 
-        mMap.addMarker(marker);
         mMap.addMarker(marker2);
         mMap.addMarker(marker3);
 
-        // Set a listener for marker click.
-        mMap.setOnMarkerClickListener(this);
+
     }
 
 
@@ -175,21 +270,6 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
         return bitmap;
     }
 
-    public void tryEnablingMyLocation() {
-        try {
-            mMap.setMyLocationEnabled(true);
-            enablePermissionsErrorMessage(false);
-        }
-        catch (SecurityException e) {
-            // Asynchronously request location permission.
-            // Callback is MainActivity.onRequestPermissionsResult
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    MainActivity.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-
-            enablePermissionsErrorMessage(true);
-        }
-    }
 
     protected void enablePermissionsErrorMessage(boolean enabled) {
         if (enabled) {
@@ -203,4 +283,5 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
             mapView.findViewById(R.id.permissions_error_msg).setVisibility(View.GONE);
         }
     }
+
 }
