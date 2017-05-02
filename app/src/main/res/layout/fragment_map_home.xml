@@ -5,6 +5,15 @@
     android:layout_height="match_parent"
     tools:context="com.teamhotspots.hotspots.MapHome">
 
+    <TextView
+        android:id="@+id/permissions_error_msg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Sorry! Hotspots requires location permissions to continue."
+        android:textSize="24sp"
+        android:textStyle="normal|bold"
+        android:visibility="gone"/>
+
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"

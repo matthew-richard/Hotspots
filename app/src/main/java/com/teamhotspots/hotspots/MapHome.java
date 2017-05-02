@@ -23,10 +23,12 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.Toolbar;
+import android.text.Layout;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -174,18 +176,31 @@ public class MapHome extends Fragment implements OnMapReadyCallback, GoogleMap.O
     }
 
     public void tryEnablingMyLocation() {
-        try { mMap.setMyLocationEnabled(true); }
+        try {
+            mMap.setMyLocationEnabled(true);
+            enablePermissionsErrorMessage(false);
+        }
         catch (SecurityException e) {
             // Asynchronously request location permission.
-            // Calls MainActivity.onRequestPermissionsResult
+            // Callback is MainActivity.onRequestPermissionsResult
             ActivityCompat.requestPermissions(getActivity(),
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                     MainActivity.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
 
-            /*TODO: Have map display error message if no permissions */
-            /* E.g "Hotspots requires location permissions to work." */
+            enablePermissionsErrorMessage(true);
+        }
+    }
 
-            /*TODO: Check for permissions on every user interaction with map */
+    protected void enablePermissionsErrorMessage(boolean enabled) {
+        if (enabled) {
+            mapView.findViewById(R.id.map).setVisibility(View.GONE);
+            mapView.findViewById(R.id.new_post).setVisibility(View.GONE);
+            mapView.findViewById(R.id.permissions_error_msg).setVisibility(View.VISIBLE);
+        }
+        else {
+            mapView.findViewById(R.id.map).setVisibility(View.VISIBLE);
+            mapView.findViewById(R.id.new_post).setVisibility(View.VISIBLE);
+            mapView.findViewById(R.id.permissions_error_msg).setVisibility(View.GONE);
         }
     }
 }

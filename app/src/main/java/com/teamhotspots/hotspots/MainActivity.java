@@ -4,6 +4,8 @@ import android.*;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -24,7 +26,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity
         implements OnRequestPermissionsResultCallback,
@@ -35,6 +40,8 @@ public class MainActivity extends AppCompatActivity
     /* For requesting location permissions at runtime */
     public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private NavigationView navigationView;
+    private MapHome mapFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,7 +63,8 @@ public class MainActivity extends AppCompatActivity
 
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, new MapHome()).commit();
+        mapFragment = new MapHome();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, mapFragment).commit();
 
         setTitle("Home");
     }
@@ -79,6 +87,14 @@ public class MainActivity extends AppCompatActivity
         // fetch username for nav drawer
         SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
         String username = sharedPref.getString(getString(R.string.username), "John Doe");
+        String iconPath = sharedPref.getString("ICON_PATH", "None");
+        if (!iconPath.equals("None")) {
+            System.out.println(iconPath);
+            ImageView userIcon = (ImageView) findViewById(R.id.user_icon);
+            File imgFile = new File(iconPath);
+            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+            userIcon.setImageBitmap(myBitmap);
+        }
         TextView usernameTV = (TextView) findViewById(R.id.username);
         usernameTV.setText(username);
 
@@ -160,16 +176,11 @@ public class MainActivity extends AppCompatActivity
         // See https://developer.android.com/training/permissions/requesting.html
         switch (requestCode) {
             case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-                /* TODO: Call map fragment's tryEnablingMyLocation() */
-
-                /* if (grantResults.length > 0
+                if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 {
-
+                    mapFragment.tryEnablingMyLocation();
                 }
-                else {
-
-                } */
             }
         }
 

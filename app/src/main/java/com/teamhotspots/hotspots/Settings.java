@@ -1,18 +1,33 @@
 package com.teamhotspots.hotspots;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import java.io.IOException;
+
+import static android.app.Activity.RESULT_OK;
+import static android.content.Context.MODE_PRIVATE;
 
 
 /**
@@ -25,6 +40,9 @@ import android.widget.Toast;
  */
 public class Settings extends Fragment {
     private OnFragmentInteractionListener mListener;
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+    static final int REQUEST_IMAGE_PICKER = 2;
+    Uri mPhotoUri;
 
     public Settings() {
         // Required empty public constructor
@@ -40,11 +58,6 @@ public class Settings extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -55,6 +68,10 @@ public class Settings extends Fragment {
         navigationView.getMenu().getItem(3).setChecked(true);
 
         final EditText et = (EditText) rootView.findViewById(R.id.set_user_enter);
+        SharedPreferences sharedPref = getActivity().getPreferences(MODE_PRIVATE);
+        String username = sharedPref.getString(getString(R.string.username), "John Doe");
+        et.setText(username);
+        et.setSelection(et.getText().length());
 
         final Button button_cancel = (Button) rootView.findViewById(R.id.settings_btn_cancel);
         button_cancel.setOnClickListener(new View.OnClickListener() {
@@ -66,15 +83,78 @@ public class Settings extends Fragment {
         final Button button_save = (Button) rootView.findViewById(R.id.settings_btn_save);
         button_save.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putString(getString(R.string.username), et.getText().toString());
-                editor.commit();
-                Toast.makeText(getActivity(), "Settings saved, restart app to take effect.",
-                        Toast.LENGTH_LONG).show();
+                if (et.getText().length() == 0) {
+                    Toast.makeText(getActivity(), "Username cannot be empty",
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    SharedPreferences sharedPref = getActivity().getPreferences(MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putString(getString(R.string.username), et.getText().toString());
+                    try {
+                        editor.putString("ICON_PATH", mPhotoUri.getPath());
+                    } catch (NullPointerException e) {
+                    }
+                    editor.commit();
+                    Toast.makeText(getActivity(), "Settings saved, restart app to take effect.",
+                            Toast.LENGTH_LONG).show();
+                }
             }
         });
+
+        final LinearLayout photoLayout = (LinearLayout) rootView.findViewById(R.id.photoLayout);
+        photoLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                mPhotoUri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        new ContentValues());
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mPhotoUri);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+        });
+
+        final LinearLayout galleryLayout = (LinearLayout) rootView.findViewById(R.id.galleryLayout);
+        galleryLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK,
+                        MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+                intent.setType("image/*");
+                startActivityForResult(intent, REQUEST_IMAGE_PICKER);
+            }
+        });
+
         return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // try setting icon
+        Bitmap bitmap = null;
+        try {
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getApplicationContext().getContentResolver(), mPhotoUri);
+            } catch (IOException exception) {
+            }
+
+            int orientation = 0;
+
+            try {
+                ExifInterface exif = new ExifInterface(mPhotoUri.getPath());
+                orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+                Log.d("EXIF", "Exif: " + orientation);
+            } catch (Exception e) {
+            }
+
+            bitmap = rotateImage(orientation, bitmap);
+
+            ImageView photoView = (ImageView) getView().findViewById(R.id.icon);
+            //photoView.setImageURI(path);
+            System.out.println("here");
+            photoView.setImageBitmap(bitmap);
+        } catch (NullPointerException exception) {}
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -82,6 +162,20 @@ public class Settings extends Fragment {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
         }
+    }
+
+    public Bitmap rotateImage(int orientation, Bitmap bitmap) {
+        Matrix matrix = new Matrix();
+        if (orientation == 6) {
+            matrix.postRotate(90);
+        }
+        else if (orientation == 3) {
+            matrix.postRotate(180);
+        }
+        else if (orientation == 8) {
+            matrix.postRotate(270);
+        }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true); // rotating bitmap
     }
 
     @Override
@@ -101,6 +195,16 @@ public class Settings extends Fragment {
         mListener = null;
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            //Uri selectedImageUri = data.getData();
+
+        } else if (requestCode == REQUEST_IMAGE_PICKER && resultCode == RESULT_OK) {
+            mPhotoUri = data.getData();
+        }
+    }
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
