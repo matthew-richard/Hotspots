@@ -138,7 +138,7 @@ public class PhotoConfirm extends Fragment {
                 username = sharedPref.getString(getString(R.string.username),
                         getString(R.string.anonymous));
 
-                //user icon
+                //user icon path
                 usericon = sharedPref.getString("userIcon",
                         "anonymousIcon");
 
