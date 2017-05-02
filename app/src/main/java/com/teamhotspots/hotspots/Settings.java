@@ -9,6 +9,7 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -22,6 +23,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -61,7 +63,7 @@ public class Settings extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_settings, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_settings, container, false);
         Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
         toolbar.setTitle("Settings");
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
@@ -69,7 +71,7 @@ public class Settings extends Fragment {
 
         final EditText et = (EditText) rootView.findViewById(R.id.set_user_enter);
         SharedPreferences sharedPref = getActivity().getPreferences(MODE_PRIVATE);
-        String username = sharedPref.getString(getString(R.string.username), "John Doe");
+        final String username = sharedPref.getString(getString(R.string.username), "John Doe");
         et.setText(username);
         et.setSelection(et.getText().length());
 
@@ -90,12 +92,8 @@ public class Settings extends Fragment {
                     SharedPreferences sharedPref = getActivity().getPreferences(MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPref.edit();
                     editor.putString(getString(R.string.username), et.getText().toString());
-                    try {
-                        editor.putString("ICON_PATH", mPhotoUri.getPath());
-                    } catch (NullPointerException e) {
-                    }
                     editor.commit();
-                    Toast.makeText(getActivity(), "Settings saved, restart app to take effect.",
+                    Toast.makeText(getActivity(), "Saved",
                             Toast.LENGTH_LONG).show();
                 }
             }
@@ -151,8 +149,6 @@ public class Settings extends Fragment {
             bitmap = rotateImage(orientation, bitmap);
 
             ImageView photoView = (ImageView) getView().findViewById(R.id.icon);
-            //photoView.setImageURI(path);
-            System.out.println("here");
             photoView.setImageBitmap(bitmap);
         } catch (NullPointerException exception) {}
     }

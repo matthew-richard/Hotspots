@@ -113,8 +113,7 @@
                 android:id="@+id/icon"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
-                android:layout_weight="1"
-                app:srcCompat="@drawable/img_bird1" />
+                android:layout_weight="1" />
         </LinearLayout>
 
         <LinearLayout
