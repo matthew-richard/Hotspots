@@ -42,8 +42,11 @@ import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
@@ -61,13 +64,15 @@ import java.util.ArrayList;
 public class MapHome extends Fragment
         implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, LocationListener
 {
-    public static final int LOCATION_REQUEST_INTERVAL_SEC = 10;
+    public static final int LOCATION_REQUEST_INTERVAL_SEC = 5;
     public static final int LOCATION_REQUEST_FASTEST_INTERVAL_SEC = 3;
 
     private GoogleMap mMap;
     private Location lastLocation;
     private Marker locationMarker;
+    private Circle locationCircle;
     private ArrayList<Marker> hotspotMarkers;
+    private ArrayList<Circle> hotspotCircles;
 
     private static View mapView;
     private static GoogleApiClient googleApiClient;
@@ -107,7 +112,9 @@ public class MapHome extends Fragment
         }
 
         locationMarker = null;
+        locationCircle = null;
         hotspotMarkers = new ArrayList<>();
+        hotspotCircles = new ArrayList<>();
     }
 
     public void tryRequestingLocationUpdates() {
@@ -119,6 +126,7 @@ public class MapHome extends Fragment
                             .setFastestInterval(LOCATION_REQUEST_FASTEST_INTERVAL_SEC * 1000)
                             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY),
                     this);
+
             enablePermissionsErrorMessage(false);
 
             // TODO: Pause location requests in onStop(), resume in onStart()
@@ -149,17 +157,25 @@ public class MapHome extends Fragment
                     .position(latlng)
                     .title(null)
                     .icon(BitmapDescriptorFactory.fromBitmap(resized_ic1))
+                    .anchor(
+                        Float.parseFloat(getString(R.string.locationIconAnchorX)),
+                        Float.parseFloat(getString(R.string.locationIconAnchorY)))
             );
 
-            // TODO: Add circle
+            locationCircle = mMap.addCircle(new CircleOptions()
+                    .center(latlng)
+                    .fillColor(ContextCompat.getColor(getContext(), R.color.locationCircleFill))
+                    .strokeColor(ContextCompat.getColor(getContext(), R.color.locationCircleStroke))
+                    .strokeWidth(Float.parseFloat(getString(R.string.locationCircleStrokeWidth)))
+                    .radius(Float.parseFloat(getString(R.string.locationCircleRadius))));
+
 
             // Center camera on the first location received
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
         }
         else {
             locationMarker.setPosition(latlng);
-
-            // TODO: Update circle
+            locationCircle.setCenter(latlng);
         }
     }
 
@@ -196,6 +212,7 @@ public class MapHome extends Fragment
         // Map settings (besides those that are set in fragment_map_home.xml)
         mMap.setBuildingsEnabled(true);
         mMap.setIndoorEnabled(false);
+        mMap.setMapStyle(new MapStyleOptions(getString(R.string.mapStyle)));
 
         // Set a listener for marker click.
         mMap.setOnMarkerClickListener(this);
@@ -221,16 +238,27 @@ public class MapHome extends Fragment
         MarkerOptions marker2 = new MarkerOptions().position(new LatLng(39.329159, -76.618424)).title("hotspot");
         Bitmap ic2 = getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_whatshot);
         Bitmap resized_ic2 = Bitmap.createScaledBitmap(ic2, 200, 200, false);
-        marker2.icon(BitmapDescriptorFactory.fromBitmap(resized_ic2));
+        marker2.icon(BitmapDescriptorFactory.fromBitmap(resized_ic2))
+                .anchor(Float.parseFloat(getString(R.string.hotspotIconAnchorX)),
+                        Float.parseFloat(getString(R.string.hotspotIconAnchorY)));
+        hotspotMarkers.add(mMap.addMarker(marker2));
 
         MarkerOptions marker3 = new MarkerOptions().position(new LatLng(39.326702, -76.620296)).title("hotspot2");
         Bitmap ic3 = getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_whatshot);
         Bitmap resized_ic3 = Bitmap.createScaledBitmap(ic3, 200, 200, false);
-        marker3.icon(BitmapDescriptorFactory.fromBitmap(resized_ic3));
+        marker3.icon(BitmapDescriptorFactory.fromBitmap(resized_ic3))
+               .anchor(Float.parseFloat(getString(R.string.hotspotIconAnchorX)),
+                       Float.parseFloat(getString(R.string.hotspotIconAnchorY)));
+        hotspotMarkers.add(mMap.addMarker(marker3));
 
-        mMap.addMarker(marker2);
-        mMap.addMarker(marker3);
-
+        for (int i = 0 ; i < hotspotMarkers.size(); i++) {
+            hotspotCircles.add(mMap.addCircle(new CircleOptions()
+                    .center(hotspotMarkers.get(i).getPosition())
+                    .fillColor(ContextCompat.getColor(getContext(), R.color.hotspotCircleFill))
+                    .strokeColor(ContextCompat.getColor(getContext(), R.color.hotspotCircleStroke))
+                    .strokeWidth(Float.parseFloat(getString(R.string.hotspotCircleStrokeWidth)))
+                    .radius(Float.parseFloat(getString(R.string.hotspotCircleRadius)))));
+        }
 
     }
 

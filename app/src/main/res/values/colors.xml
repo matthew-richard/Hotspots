@@ -11,4 +11,11 @@
     <color name="lightGrey">#aaaaaa</color>
     <color name="darkGrey">#606060</color>
     <color name="darkRed">#bb285c</color>
+
+
+    <color name="locationCircleFill">#55ffffff</color>
+    <color name="locationCircleStroke">#d1d1d1</color>
+
+    <color name="hotspotCircleFill">#55ffac00</color>
+    <color name="hotspotCircleStroke">#ffd7e5</color>
 </resources>
