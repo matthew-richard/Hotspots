@@ -133,12 +133,6 @@ public class NewPostActivity extends AppCompatActivity implements
             final Button button_submit = (Button) rootView.findViewById(R.id.submit);
             button_submit.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    //TODO: package all fields into a database entry and add to database
-                    //username, or anonymous
-                    //user icon
-                    //text field
-                    //current location
-                    //time created
                     String username = sharedPref.getString(getString(R.string.username),
                             getString(R.string.anonymous));
 
@@ -149,7 +143,9 @@ public class NewPostActivity extends AppCompatActivity implements
 
                     String msg = et.getText().toString();
                     String imageUrl = null;
-                    String userIcon = null;
+                    //user icon path
+                    String userIcon = sharedPref.getString("ICON_PATH",
+                            "anonymousIcon");
                     String timeStamp = new Date().toString();
 
                     LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);

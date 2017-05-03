@@ -24,13 +24,24 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -61,8 +72,9 @@ public class Feed extends Fragment {
         mReference = FirebaseDatabase.getInstance().getReference();
         postsListView = (ListView) view.findViewById(R.id.feed_list);
 
-        TextView community = (TextView) view.findViewById(R.id.community_name);
-        community.setText("Johns Hopkins University");
+        //for now we won't worry about populating this
+        //TextView community = (TextView) view.findViewById(R.id.community_name);
+        //community.setText("Johns Hopkins University");
 
         // TODO: Get hotspot key from bundled arguments
         //Bundle b = getArguments();
@@ -137,11 +149,23 @@ public class Feed extends Fragment {
 
     @Override
     public boolean onContextItemSelected(MenuItem item){
-        if (item.getTitle()=="Save to Gallery"){
+        if (item.getTitle()=="Save to Gallery") {
             //need to get image bitmap, need to pull image from entry
-            // TODO: implement this
-            /*Bitmap icon = BitmapFactory.decodeResource(getActivity().getApplicationContext().getResources(), itemSelected.getDrawable());
-            MediaStore.Images.Media.insertImage(getActivity().getContentResolver(), icon, null , null);*/
+            itemSelected.getImageUrl();
+            StorageReference storageRef = FirebaseStorage.getInstance().getReference();
+            StorageReference islandRef = storageRef.child(itemSelected.getImageUrl());
+            try {
+                final File localFile = File.createTempFile("images", "jpg");
+                islandRef.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                        // Local temp file has been created
+                        Bitmap bitmap = BitmapFactory.decodeFile(taskSnapshot.toString());
+                        MediaStore.Images.Media.insertImage(getActivity().getContentResolver(), bitmap, null, null);
+
+                    }
+                });
+            } catch (IOException e) { }
             Toast.makeText(getActivity().getApplicationContext(),"Saved to gallery!",Toast.LENGTH_LONG).show();
         } else {
             return false;
@@ -178,15 +202,17 @@ public class Feed extends Fragment {
                     username.setText(p.getUsername());
                 }
 
-                if (icon != null && (p.getUsername().equals(getString(R.string.anonymous)))) {
+                if (p.getUsername().equals(getString(R.string.anonymous))) {
                     icon.setImageResource(R.drawable.ic_person_outline_black_24dp);
-                } else if (icon != null && !p.getUsername().equals(getString(R.string.anonymous))) {
+                } else if (p.getUsericon().equals("anonymousIcon")) {
                     icon.setImageResource(R.drawable.img_bird1);
+                } else {
+                    //may need to format size
+                    Picasso.with(getContext()).load(p.getUsericon()).into(icon);
                 }
 
                 if (picture != null && p.isPicturePost()) {
-                    // TODO: Implement this
-                    // picture.setBackgroundResource(p.getDrawable());
+                    Picasso.with(getContext()).load(p.getImageUrl()).into(picture);
                     picture.setVisibility(View.VISIBLE);
                     ViewGroup.LayoutParams params = picture.getLayoutParams();
                     params.height = dpToPx(getActivity().getApplicationContext(), 200);

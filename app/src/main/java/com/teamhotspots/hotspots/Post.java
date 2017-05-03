@@ -38,6 +38,8 @@ public class Post {
         this.username = username;
     }
 
+    public String getUsericon() {return userIcon;}
+
     public String getMsg() {
         return msg;
     }

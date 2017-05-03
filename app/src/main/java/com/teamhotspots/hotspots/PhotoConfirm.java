@@ -139,7 +139,7 @@ public class PhotoConfirm extends Fragment {
                         getString(R.string.anonymous));
 
                 //user icon path
-                usericon = sharedPref.getString("userIcon",
+                usericon = sharedPref.getString("ICON_PATH",
                         "anonymousIcon");
 
                 //anonymous or not
@@ -191,10 +191,6 @@ public class PhotoConfirm extends Fragment {
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                         imageUrl = taskSnapshot.getDownloadUrl().toString();
                         writeNewPost(new Post(username, msg, imageUrl, usericon, timeStamp, lat, lng));
-
-                        //to load onto feed
-                        //URL myURL = new URL(imageUrl);
-                        //Picasso.with(getContext()).load(myURL).into(imageView);
                     }
                 });
 
