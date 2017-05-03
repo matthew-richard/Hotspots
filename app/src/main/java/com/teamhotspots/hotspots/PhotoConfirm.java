@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.CursorLoader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -111,7 +112,7 @@ public class PhotoConfirm extends Fragment {
         int orientation = 0;
 
         try {
-            ExifInterface exif = new ExifInterface(path.getPath());
+            ExifInterface exif = new ExifInterface(getPath(path));
             orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
             Log.d("EXIF", "Exif: " + orientation);
         } catch (Exception e) {}
@@ -204,6 +205,14 @@ public class PhotoConfirm extends Fragment {
         return rootView;
     }
 
+    private String getPath(Uri uri) {
+        String[]  data = { MediaStore.Images.Media.DATA };
+        CursorLoader loader = new CursorLoader(getContext(), uri, data, null, null, null);
+        Cursor cursor = loader.loadInBackground();
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
+    }
 
     public void writeNewPost(Post post) {
         String key = mDatabase.child("posts").push().getKey();
@@ -227,23 +236,6 @@ public class PhotoConfirm extends Fragment {
         mDatabase.updateChildren(childUpdates);
 
     }*/
-
-
-
-    private int getImageOrientation(){
-        final String[] imageColumns = { MediaStore.Images.Media._ID, MediaStore.Images.ImageColumns.ORIENTATION };
-        final String imageOrderBy = MediaStore.Images.Media._ID+" DESC";
-        Cursor cursor = getContext().getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                imageColumns, null, null, imageOrderBy);
-
-        if(cursor.moveToFirst()){
-            int orientation = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.ImageColumns.ORIENTATION));
-            cursor.close();
-            return orientation;
-        } else {
-            return 0;
-        }
-    }
 
     public Bitmap rotateImage(int orientation, Bitmap bitmap) {
         Matrix matrix = new Matrix();

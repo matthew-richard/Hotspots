@@ -187,6 +187,7 @@ public class NewPostActivity extends AppCompatActivity implements
          */
         static final int REQUEST_IMAGE_CAPTURE = 1;
         static final int REQUEST_IMAGE_PICKER = 2;
+        private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
 
         private View mView;
         Uri mPhotoUri;
@@ -220,6 +221,7 @@ public class NewPostActivity extends AppCompatActivity implements
             camera.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    checkPermission();
                     Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     mPhotoUri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                             new ContentValues());
@@ -275,6 +277,17 @@ public class NewPostActivity extends AppCompatActivity implements
                 fragment.setArguments(args);
                 fragmentManager.beginTransaction().replace(R.id.main_content, fragment).addToBackStack(null).commit();
 
+            }
+        }
+
+        public void checkPermission() {
+            if (ContextCompat.checkSelfPermission(getActivity(),
+            Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+                ActivityCompat.requestPermissions(getActivity(),
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
             }
         }
 
