@@ -133,12 +133,6 @@ public class NewPostActivity extends AppCompatActivity implements
             final Button button_submit = (Button) rootView.findViewById(R.id.submit);
             button_submit.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    //TODO: package all fields into a database entry and add to database
-                    //username, or anonymous
-                    //user icon
-                    //text field
-                    //current location
-                    //time created
                     String username = sharedPref.getString(getString(R.string.username),
                             getString(R.string.anonymous));
 
@@ -149,12 +143,17 @@ public class NewPostActivity extends AppCompatActivity implements
 
                     String msg = et.getText().toString();
                     String imageUrl = null;
-                    String userIcon = null;
+                    //user icon path
+                    String userIcon = sharedPref.getString("ICON_PATH",
+                            "anonymousIcon");
                     String timeStamp = new Date().toString();
 
                     LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
                     try {
                         Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        if (location == null) {
+                            location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                        }
                         double lat = location.getLatitude();
                         double lng = location.getLongitude();
                         writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp, lat, lng));
@@ -188,6 +187,7 @@ public class NewPostActivity extends AppCompatActivity implements
          */
         static final int REQUEST_IMAGE_CAPTURE = 1;
         static final int REQUEST_IMAGE_PICKER = 2;
+        private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
 
         private View mView;
         Uri mPhotoUri;
@@ -221,6 +221,7 @@ public class NewPostActivity extends AppCompatActivity implements
             camera.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    checkPermission();
                     Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     mPhotoUri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                             new ContentValues());
@@ -279,16 +280,15 @@ public class NewPostActivity extends AppCompatActivity implements
             }
         }
 
-        public String getOriginalImagePath() {
-            String[] projection = { MediaStore.Images.Media.DATA };
-            Cursor cursor = getActivity().managedQuery(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    projection, null, null, null);
-            int column_index_data = cursor
-                    .getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToLast();
+        public void checkPermission() {
+            if (ContextCompat.checkSelfPermission(getActivity(),
+            Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
 
-            return cursor.getString(column_index_data);
+                ActivityCompat.requestPermissions(getActivity(),
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+            }
         }
 
     }

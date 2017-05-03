@@ -7,9 +7,9 @@ import java.util.List;
  */
 
 public class Hotspot {
-    double lat;
-    double lng;
-    List<String> posts;
+    public double lat;
+    public double lng;
+    public List<String> posts;
 
     public Hotspot() {}
     public Hotspot(double lat, double lng, List<String> posts) {
