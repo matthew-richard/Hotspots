@@ -291,18 +291,6 @@ public class NewPostActivity extends AppCompatActivity implements
             }
         }
 
-        public String getOriginalImagePath() {
-            String[] projection = { MediaStore.Images.Media.DATA };
-            Cursor cursor = getActivity().managedQuery(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    projection, null, null, null);
-            int column_index_data = cursor
-                    .getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToLast();
-
-            return cursor.getString(column_index_data);
-        }
-
     }
 
 
