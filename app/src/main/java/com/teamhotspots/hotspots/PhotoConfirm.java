@@ -180,7 +180,10 @@ public class PhotoConfirm extends Fragment {
                 };
                 lm.requestLocationUpdates(
                         LocationManager.NETWORK_PROVIDER, 5000, 10, locationListener);
-                Location location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (location == null) {
+                    location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                }
                 lng = location.getLongitude();
                 lat = location.getLatitude();
 

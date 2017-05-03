@@ -151,6 +151,9 @@ public class NewPostActivity extends AppCompatActivity implements
                     LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
                     try {
                         Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        if (location == null) {
+                            location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                        }
                         double lat = location.getLatitude();
                         double lng = location.getLongitude();
                         writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp, lat, lng));

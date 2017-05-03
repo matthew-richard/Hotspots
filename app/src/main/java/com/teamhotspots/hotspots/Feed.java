@@ -6,12 +6,15 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -35,11 +38,14 @@ import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -151,27 +157,31 @@ public class Feed extends Fragment {
     public boolean onContextItemSelected(MenuItem item){
         if (item.getTitle()=="Save to Gallery") {
             //need to get image bitmap, need to pull image from entry
-            itemSelected.getImageUrl();
-            StorageReference storageRef = FirebaseStorage.getInstance().getReference();
-            StorageReference islandRef = storageRef.child(itemSelected.getImageUrl());
-            try {
-                final File localFile = File.createTempFile("images", "jpg");
-                islandRef.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                        // Local temp file has been created
-                        Bitmap bitmap = BitmapFactory.decodeFile(taskSnapshot.toString());
-                        MediaStore.Images.Media.insertImage(getActivity().getContentResolver(), bitmap, null, null);
-
-                    }
-                });
-            } catch (IOException e) { }
+            Bitmap b = getBitmapFromURL(itemSelected.getImageUrl());
+            MediaStore.Images.Media.insertImage(getActivity().getContentResolver(), b, null, null);
             Toast.makeText(getActivity().getApplicationContext(),"Saved to gallery!",Toast.LENGTH_LONG).show();
         } else {
             return false;
         }
         return true;
     }
+
+
+    public static Bitmap getBitmapFromURL(String src) {
+        try {
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            return myBitmap;
+        } catch (IOException e) {
+            // Log exception
+            return null;
+        }
+    }
+
 
     private class PostAdapter extends ArrayAdapter<Post> {
         private Context context;
@@ -202,10 +212,8 @@ public class Feed extends Fragment {
                     username.setText(p.getUsername());
                 }
 
-                if (p.getUsername().equals(getString(R.string.anonymous))) {
+                if (p.getUsername().equals(getString(R.string.anonymous)) || p.getUsericon().equals("anonymousIcon")) {
                     icon.setImageResource(R.drawable.ic_person_outline_black_24dp);
-                } else if (p.getUsericon().equals("anonymousIcon")) {
-                    icon.setImageResource(R.drawable.img_bird1);
                 } else {
                     //may need to format size
                     Picasso.with(getContext()).load(p.getUsericon()).into(icon);
@@ -217,7 +225,7 @@ public class Feed extends Fragment {
                     ViewGroup.LayoutParams params = picture.getLayoutParams();
                     params.height = dpToPx(getActivity().getApplicationContext(), 200);
                 } else if (picture!= null && !p.isPicturePost()) {
-                    picture.setVisibility(View.INVISIBLE);
+                    picture.setVisibility(View.GONE);
                     picture.setBackgroundResource(0);
                     ViewGroup.LayoutParams params = picture.getLayoutParams();
                     params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
