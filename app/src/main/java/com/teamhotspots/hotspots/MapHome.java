@@ -42,6 +42,7 @@ import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -198,6 +199,13 @@ public class MapHome extends Fragment
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        mapView.findViewById(R.id.my_location_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                centerOnMyLocation();
+            }
+        });
+
         Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
         toolbar.setTitle("Home");
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
@@ -205,8 +213,23 @@ public class MapHome extends Fragment
         return mapView;
     }
 
+    public void centerOnMyLocation() {
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(
+                CameraPosition.builder(mMap.getCameraPosition())
+                        .bearing(0)
+                        .target(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()))
+                        .build()
+        ));
+    }
+
     @Override
     public void onMapReady(GoogleMap map) {
+        // TODO: Check if this is the first time onMapReady() is running before drawing markers
+        // Figure out when onMapReady() even runs. It seems to run every time the fragment returns
+        // to view...
+
+        // TODO: Set Activity title to "Hotspots", with the flame icon.
+
         mMap = map;
 
         // Map settings (besides those that are set in fragment_map_home.xml)
