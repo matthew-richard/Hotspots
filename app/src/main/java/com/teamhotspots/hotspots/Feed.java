@@ -12,6 +12,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.Space;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -20,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -27,12 +29,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.ui.database.FirebaseListAdapter;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
@@ -99,30 +104,69 @@ public class Feed extends Fragment {
             public void onCancelled(DatabaseError databaseError) {}
         });
 
-        mReference.child("posts").orderByKey().addValueEventListener(new ValueEventListener() {
+        DatabaseReference posts = mReference.child("posts");
+        FirebaseListAdapter<Post> adapter = new FirebaseListAdapter<Post>(getActivity(), Post.class, R.layout.post, posts) {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(String key: postKeys) {
-                    for (DataSnapshot d : dataSnapshot.getChildren()) {
-                        System.out.println(d.getKey());
-                        if (d.getKey().equals(key)) {
-                            Post p = d.getValue(Post.class);
-                            posts.add(p);
+            protected void populateView(View v, Post p, int position) {}
+
+            @Override
+            public View getView(int position, View view, ViewGroup viewGroup) {
+                String key = getRef(position).getKey();
+                LayoutInflater inflater = getActivity().getLayoutInflater();
+                Post p = getItem(position);
+
+                View v = inflater.inflate(R.layout.post, null);
+
+                if (postKeys.contains(key)) {
+                    if (p != null) {
+                        TextView username = (TextView) v.findViewById(R.id.username);
+                        ImageView picture = (ImageView) v.findViewById(R.id.picture);
+                        ImageView icon = (ImageView) v.findViewById(R.id.user_icon);
+                        TextView message = (TextView) v.findViewById(R.id.message);
+                        TextView likes = (TextView) v.findViewById(R.id.likes);
+                        if (username != null) {
+                            username.setText(p.getUsername());
                         }
+
+                        if (p.getUsername().equals(getString(R.string.anonymous)) || p.getUsericon().equals("anonymousIcon")) {
+                            icon.setImageResource(R.drawable.ic_person_outline_black_24dp);
+                        } else {
+                            //may need to format size
+                            Picasso.with(getContext()).load(p.getUsericon()).into(icon);
+                        }
+
+                        if (picture != null && p.isPicturePost()) {
+                            Picasso.with(getContext()).load(p.getImageUrl()).into(picture);
+                            picture.setVisibility(View.VISIBLE);
+                            ViewGroup.LayoutParams params = picture.getLayoutParams();
+                            params.height = dpToPx(getActivity().getApplicationContext(), 200);
+                        } else if (picture!= null && !p.isPicturePost()) {
+                            picture.setVisibility(View.GONE);
+                            picture.setBackgroundResource(0);
+                            ViewGroup.LayoutParams params = picture.getLayoutParams();
+                            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                        }
+
+                        if (message != null) {
+                            message.setText(p.getMsg());
+                        }
+
+                        if (likes != null) {
+                            likes.setText("" + p.getNumLikes());
+                        }
+
+                        ImageView thumbIcon = (ImageView) v.findViewById(R.id.like_icon);
+                        thumbIcon.setOnClickListener(new ThumbIconOnClickListener(p, thumbIcon, likes, mReference));
                     }
+                    return v;
+                } else {
+                    return new View(getActivity().getApplicationContext());
                 }
-
-                adapter = new PostAdapter(getActivity(), R.layout.post, posts);
-                postsListView.setAdapter(adapter);
-                registerForContextMenu(postsListView);
             }
+        };
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
+        postsListView.setAdapter(adapter);
+        registerForContextMenu(postsListView);
         postsListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
@@ -135,16 +179,6 @@ public class Feed extends Fragment {
 
         return view;
     }
-/*
-    private void generatePosts() {
-        posts.add(new Post(getString(R.string.anonymous), "My first post!"));
-        posts.add(new Post("Kathleen", "My second post!"));
-        posts.add(new Post("Kathleen", "This is a really really really really really really really " +
-                "really really really really really really really really really really really really" +
-                " really really LONG post!"));
-        posts.add(new Post("PAWS", "Dogs at The Beach, 3 to 5 pm!"));
-        posts.add(new Post("Hoot", "Look at this bird!"));
-    }*/
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
@@ -240,7 +274,7 @@ public class Feed extends Fragment {
                 }
 
                 ImageView thumbIcon = (ImageView) view.findViewById(R.id.like_icon);
-                thumbIcon.setOnClickListener(new ThumbIconOnClickListener(p, thumbIcon, likes));
+                thumbIcon.setOnClickListener(new ThumbIconOnClickListener(p, thumbIcon, likes, mReference));
             }
             return view;
         }
@@ -251,26 +285,47 @@ public class Feed extends Fragment {
         private TextView likes;
         private ImageView thumbIcon;
         private boolean pressed = false;
+        private DatabaseReference ref;
 
-        public ThumbIconOnClickListener(Post post, ImageView thumbIcon, TextView likes) {
+        public ThumbIconOnClickListener(Post post, ImageView thumbIcon, TextView likes, DatabaseReference ref) {
             this.post = post;
             this.thumbIcon = thumbIcon;
             this.likes = likes;
+            this.ref = ref;
         }
 
         @Override
         public void onClick(View view) {
-            if (!pressed) {
-                this.pressed = true;
-                post.upvote();
-                thumbIcon.setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_ATOP);
-            } else {
-                this.pressed = false;
-                post.undoVote();
-                thumbIcon.clearColorFilter();
-            }
+            ref.runTransaction(new Transaction.Handler() {
+                @Override
+                public Transaction.Result doTransaction(MutableData mutableData) {
+                    Post p = mutableData.getValue(Post.class);
+                    if (p == null) {
+                        return Transaction.success(mutableData);
+                    }
 
-            this.likes.setText("" + post.getNumLikes());
+                    if (!pressed) {
+                        pressed = true;
+                        post.upvote();
+                        thumbIcon.setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_ATOP);
+                    } else {
+                        pressed = false;
+                        post.undoVote();
+                        thumbIcon.clearColorFilter();
+                    }
+
+                    likes.setText("" + post.getNumLikes());
+
+                    // Set value and report transaction success
+                    mutableData.setValue(p);
+                    return Transaction.success(mutableData);
+                }
+
+                @Override
+                public void onComplete(DatabaseError databaseError, boolean b,
+                                       DataSnapshot dataSnapshot) {
+                }
+            });
         }
     }
 
