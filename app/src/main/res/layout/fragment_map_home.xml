@@ -27,9 +27,9 @@
         app:mapType="normal"
         app:uiCompass="false"
         app:uiMapToolbar="false"
-        app:uiRotateGestures="false"
+        app:uiRotateGestures="true"
         app:uiScrollGestures="true"
-        app:uiTiltGestures="false"
+        app:uiTiltGestures="true"
         app:uiZoomControls="false"
         app:uiZoomGestures="true"
         tools:context=".MapHome" />
@@ -46,5 +46,18 @@
         android:tint="#ffffff"
         app:fabSize="normal"
         app:srcCompat="@drawable/ic_edit_black_24dp" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/my_location_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="20dp"
+        android:clickable="true"
+        android:tint="#000000"
+        app:backgroundTint="@color/myLocationButtonBackground"
+        app:fabSize="normal"
+        app:srcCompat="@drawable/ic_my_map" />
 
 </FrameLayout>
