@@ -6,15 +6,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -27,32 +23,19 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FileDownloadTask;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Kathleen on 4/7/2017.
@@ -60,10 +43,12 @@ import java.util.Map;
 
 public class Feed extends Fragment {
     private ListView postsListView;
-    private List<Post> posts = new ArrayList<Post>();
-    private PostAdapter adapter;
+    private PostAdapter posts;
     private Post itemSelected;
     private DatabaseReference mReference;
+
+    private ValueEventListener hotspotValueListener;
+    private ValueEventListener postsValueListener;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -77,6 +62,9 @@ public class Feed extends Fragment {
         // generatePosts();
         mReference = FirebaseDatabase.getInstance().getReference();
         postsListView = (ListView) view.findViewById(R.id.feed_list);
+        posts = new PostAdapter(getActivity(), R.layout.post, new ArrayList<Post>());
+        postsListView.setAdapter(posts);
+        registerForContextMenu(postsListView);
 
         //for now we won't worry about populating this
         //TextView community = (TextView) view.findViewById(R.id.community_name);
@@ -86,42 +74,43 @@ public class Feed extends Fragment {
         //Bundle b = getArguments();
         //String hotspotKey = b.getString("hotspotKey");
         String hotspotKey = "example-hotspot";
-        final List<String> postKeys = new ArrayList<String>();
+        final List<String> postKeys = new ArrayList<>();
 
-        mReference.child("hotspots").child(hotspotKey).addValueEventListener(new ValueEventListener() {
+        hotspotValueListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Hotspot h = dataSnapshot.getValue(Hotspot.class);
+                postKeys.clear();
                 postKeys.addAll(h.posts);
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {}
-        });
+        };
+        mReference.child("hotspots").child(hotspotKey).addValueEventListener(hotspotValueListener);
 
-        mReference.child("posts").orderByKey().addValueEventListener(new ValueEventListener() {
+        // TODO: Switch to ChildEventListener to detect when posts are created/removed/edited
+        // This avoids iterating through every post. Do a SingleValueEventListener when the feed
+        // is created
+
+        postsValueListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for(String key: postKeys) {
-                    for (DataSnapshot d : dataSnapshot.getChildren()) {
-                        System.out.println(d.getKey());
-                        if (d.getKey().equals(key)) {
-                            Post p = d.getValue(Post.class);
-                            posts.add(p);
-                        }
+                posts.clear();
+                for (DataSnapshot d : dataSnapshot.getChildren()) {
+                    if (postKeys.contains(d.getKey())) {
+                        Post p = d.getValue(Post.class);
+                        posts.add(p);
                     }
                 }
-
-                adapter = new PostAdapter(getActivity(), R.layout.post, posts);
-                postsListView.setAdapter(adapter);
-                registerForContextMenu(postsListView);
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });
+        };
+        mReference.child("posts").orderByKey().addValueEventListener(postsValueListener);
 
         postsListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -134,6 +123,16 @@ public class Feed extends Fragment {
         });
 
         return view;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        // Remove Firebase ValueEventListeners, or else the fragment will continue listening
+        // after being detached from the activity.
+        mReference.child("posts").removeEventListener(postsValueListener);
+        mReference.child("hotspots").removeEventListener(hotspotValueListener);
     }
 /*
     private void generatePosts() {

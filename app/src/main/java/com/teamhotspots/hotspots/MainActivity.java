@@ -185,6 +185,7 @@ public class MainActivity extends AppCompatActivity
                     mapFragment.tryRequestingLocationUpdates();
                 }
             }
+            // TODO: Handle permissions result for external storage
         }
 
         return;

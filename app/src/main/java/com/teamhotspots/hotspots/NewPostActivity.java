@@ -96,7 +96,7 @@ public class NewPostActivity extends AppCompatActivity implements
         }
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.main_content, fragment).addToBackStack(null).commit();
+        fragmentManager.beginTransaction().replace(R.id.main_content, fragment).commit();
 
     }
 
@@ -171,6 +171,9 @@ public class NewPostActivity extends AppCompatActivity implements
 
         public void writeNewPost(Post post) {
             String key = mDatabase.child("posts").push().getKey();
+            // TODO: If post is in hotspot's range, update that hotspot's list of posts
+            // e.g. hotspot.child("posts").push().setValue(postId)
+
             Map<String, Object> postValues = post.toMap();
 
             Map<String, Object> childUpdates = new HashMap<>();
