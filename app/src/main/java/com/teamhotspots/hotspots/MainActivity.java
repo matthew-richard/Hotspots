@@ -1,6 +1,8 @@
 package com.teamhotspots.hotspots;
 
 import android.*;
+import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -30,6 +32,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.net.URI;
 
 public class MainActivity extends AppCompatActivity
         implements OnRequestPermissionsResultCallback,
@@ -56,7 +61,15 @@ public class MainActivity extends AppCompatActivity
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
+                String username = sharedPref.getString(getString(R.string.username), "John Doe");
+                TextView usernameTV = (TextView) findViewById(R.id.username);
+                usernameTV.setText(username);
+            }
+        };
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
@@ -85,20 +98,6 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
-
-        // fetch username for nav drawer
-        SharedPreferences sharedPref = getPreferences(MODE_PRIVATE);
-        String username = sharedPref.getString(getString(R.string.username), "John Doe");
-        String iconPath = sharedPref.getString("ICON_PATH", "None");
-        if (!iconPath.equals("None")) {
-            System.out.println(iconPath);
-            ImageView userIcon = (ImageView) findViewById(R.id.user_icon);
-            File imgFile = new File(iconPath);
-            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-            userIcon.setImageBitmap(myBitmap);
-        }
-        TextView usernameTV = (TextView) findViewById(R.id.username);
-        usernameTV.setText(username);
 
         return true;
     }
@@ -185,6 +184,7 @@ public class MainActivity extends AppCompatActivity
                     mapFragment.tryRequestingLocationUpdates();
                 }
             }
+            // TODO: Handle permissions result for external storage
         }
 
         return;
@@ -195,4 +195,5 @@ public class MainActivity extends AppCompatActivity
         Intent intent = new Intent(this, NewPostActivity.class);
         startActivity(intent);
     }
+
 }

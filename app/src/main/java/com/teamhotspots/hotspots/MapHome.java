@@ -60,7 +60,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
-// TODO: Add button to UI for re-centering on current location
+// TODO: Hide MyLocation button when current location is within view
 
 public class MapHome extends Fragment
         implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, LocationListener
