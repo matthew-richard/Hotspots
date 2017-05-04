@@ -26,8 +26,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.IOException;
 
@@ -97,6 +99,16 @@ public class Settings extends Fragment {
                     SharedPreferences.Editor editor = sharedPref.edit();
                     editor.putString(getString(R.string.username), et.getText().toString());
                     editor.commit();
+
+                    StorageReference filepath = mStorage.child("Icons").child(mPhotoUri.getLastPathSegment());
+
+                    filepath.putFile(mPhotoUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                        }
+                    });
+
                     Toast.makeText(getActivity(), "Saved",
                             Toast.LENGTH_LONG).show();
                 }
@@ -203,7 +215,7 @@ public class Settings extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            //Uri selectedImageUri = data.getData();
+            //Uri uri = data.getData();
 
         } else if (requestCode == REQUEST_IMAGE_PICKER && resultCode == RESULT_OK) {
             mPhotoUri = data.getData();
