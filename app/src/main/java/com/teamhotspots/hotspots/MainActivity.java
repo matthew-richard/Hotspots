@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity
     public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private NavigationView navigationView;
     private MapHome mapFragment;
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

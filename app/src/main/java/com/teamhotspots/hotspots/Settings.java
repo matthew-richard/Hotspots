@@ -26,6 +26,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
 import java.io.IOException;
 
 import static android.app.Activity.RESULT_OK;
@@ -45,6 +48,7 @@ public class Settings extends Fragment {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_IMAGE_PICKER = 2;
     Uri mPhotoUri;
+    private StorageReference mStorage;
 
     public Settings() {
         // Required empty public constructor
@@ -121,6 +125,10 @@ public class Settings extends Fragment {
                 startActivityForResult(intent, REQUEST_IMAGE_PICKER);
             }
         });
+
+        // firebase
+        mStorage = FirebaseStorage.getInstance().getReference();
+
 
         return rootView;
     }
