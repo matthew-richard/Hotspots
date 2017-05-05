@@ -100,14 +100,15 @@ public class Settings extends Fragment {
                     editor.putString(getString(R.string.username), et.getText().toString());
                     editor.commit();
 
-                    StorageReference filepath = mStorage.child("Icons").child(mPhotoUri.getLastPathSegment());
+                    try {
+                        StorageReference filepath = mStorage.child("Icons").child(mPhotoUri.getLastPathSegment());
+                        filepath.putFile(mPhotoUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
-                    filepath.putFile(mPhotoUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-
-                        }
-                    });
+                            }
+                        });
+                } catch (NullPointerException e) {}
 
                     Toast.makeText(getActivity(), "Saved",
                             Toast.LENGTH_LONG).show();
