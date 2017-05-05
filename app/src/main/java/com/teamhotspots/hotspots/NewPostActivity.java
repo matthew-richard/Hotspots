@@ -81,7 +81,8 @@ public class NewPostActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_new_post);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        sharedPref = getPreferences(MODE_PRIVATE);
+        sharedPref = getSharedPreferences("PREF", MODE_PRIVATE);
+
 
         Window window = getWindow();
         window.setStatusBarColor(ContextCompat.getColor(this , R.color.black));
@@ -133,6 +134,19 @@ public class NewPostActivity extends AppCompatActivity implements
             final Button button_submit = (Button) rootView.findViewById(R.id.submit);
             button_submit.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    int psts = sharedPref.getInt("NUM_POSTS", 0);
+                    psts += 1;
+                    editor.putInt("NUM_POSTS", psts);
+                    editor.commit();
+
+                    //TODO update this if post becomes a hotspot centroid
+                    //int htspts = sharedPref.getInt("NUM_HTSPT", 0);
+                    //htspts += 1;
+                    //editor.putInt("NUM_HTSPT", psts);
+                    //editor.commit();
+
+
                     String username = sharedPref.getString(getString(R.string.username),
                             getString(R.string.anonymous));
 

@@ -85,7 +85,8 @@ public class PhotoConfirm extends Fragment {
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mStorage = FirebaseStorage.getInstance().getReference();
-        sharedPref = getActivity().getPreferences(MODE_PRIVATE);
+        sharedPref = getActivity().getSharedPreferences("PREF", MODE_PRIVATE);
+
 
         if (getArguments() != null) {
             path = getArguments().getParcelable("path");
@@ -133,7 +134,17 @@ public class PhotoConfirm extends Fragment {
         final Button button_submit = (Button) rootView.findViewById(R.id.submit);
         button_submit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                //TODO: package all fields into a database entry and add to database
+                SharedPreferences.Editor editor = sharedPref.edit();
+                int psts = sharedPref.getInt("NUM_POSTS", 0);
+                psts += 1;
+                editor.putInt("NUM_POSTS", psts);
+                editor.commit();
+
+                //TODO update this if post becomes a hotspot centroid
+                //int htspts = sharedPref.getInt("NUM_HTSPT", 0);
+                //htspts += 1;
+                //editor.putInt("NUM_HTSPT", psts);
+                //editor.commit();
 
                 //username
                 username = sharedPref.getString(getString(R.string.username),
