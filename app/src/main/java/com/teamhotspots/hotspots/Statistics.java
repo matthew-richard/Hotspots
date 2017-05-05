@@ -71,9 +71,7 @@ public class Statistics extends Fragment {
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
         navigationView.getMenu().getItem(2).setChecked(true);
 
-        sharedPref = getActivity().getPreferences(MODE_PRIVATE);
-
-        getActivity().getSharedPreferences("PREF", MODE_PRIVATE);
+        sharedPref = getActivity().getSharedPreferences("PREF", MODE_PRIVATE);
 
         if (pts != null) {
             parts = pts.split(",");
