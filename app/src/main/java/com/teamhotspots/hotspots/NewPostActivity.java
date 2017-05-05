@@ -185,6 +185,13 @@ public class NewPostActivity extends AppCompatActivity implements
 
         public void writeNewPost(Post post) {
             String key = mDatabase.child("posts").push().getKey();
+            String created = sharedPref.getString("CREATED", "");
+            SharedPreferences.Editor editor = sharedPref.edit();
+            StringBuilder sb = new StringBuilder(created);
+            sb.append(key + ",");
+            editor.putString("CREATED", sb.toString());
+            editor.commit();
+
             // TODO: If post is in hotspot's range, update that hotspot's list of posts
             // e.g. hotspot.child("posts").push().setValue(postId)
 

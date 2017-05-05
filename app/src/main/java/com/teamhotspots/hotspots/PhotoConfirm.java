@@ -205,7 +205,9 @@ public class PhotoConfirm extends Fragment {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                         imageUrl = taskSnapshot.getDownloadUrl().toString();
-                        writeNewPost(new Post(username, msg, imageUrl, usericon, timeStamp, lat, lng));
+
+                        writeNewPost();
+
                     }
                 });
 
@@ -214,6 +216,25 @@ public class PhotoConfirm extends Fragment {
             }
         });
         return rootView;
+    }
+
+    private void writeNewPost() {
+        String key = mDatabase.child("posts").push().getKey();
+        String created = sharedPref.getString("CREATED", "");
+        SharedPreferences.Editor editor = sharedPref.edit();
+        StringBuilder sb = new StringBuilder(created);
+        sb.append(key + ",");
+        editor.putString("CREATED", sb.toString());
+        editor.commit();
+
+        Post post = new Post(username, msg, imageUrl, usericon, timeStamp, lat, lng);
+        Map<String, Object> postValues = post.toMap();
+
+        Map<String, Object> childUpdates = new HashMap<>();
+        childUpdates.put("/posts/" + key, postValues);
+
+        mDatabase.updateChildren(childUpdates);
+
     }
 
     private String getPath(Uri uri) {

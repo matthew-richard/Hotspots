@@ -23,7 +23,15 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static android.content.Context.MODE_PRIVATE;
+import static android.text.TextUtils.isEmpty;
+import static com.teamhotspots.hotspots.R.layout.post;
 
 
 /**
@@ -72,28 +80,31 @@ public class Statistics extends Fragment {
         navigationView.getMenu().getItem(2).setChecked(true);
 
         sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
-        String pts = sharedPref.getString(getString(R.string.liked_posts), "");
+        String pts = sharedPref.getString("CREATED", "");
+        Log.d("created", pts);
 
-        if (pts != null) {
+        if (!isEmpty(pts)) {
             parts = pts.split(",");
 
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            final DatabaseReference postsRef = database.getReference();
-            postsRef.child("posts").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    Post p = dataSnapshot.getValue(Post.class);
-                    for (int i = 0; i < parts.length; i++) {
-                        if (dataSnapshot.getKey() == parts[i]) {
-                            number_likes += p.getNumLikes();
-                        }
-                    }
-                }
+            final FirebaseDatabase database = FirebaseDatabase.getInstance();
+            for (int i = 0; i < parts.length; i++) {
+                DatabaseReference postsRef = database.getReference().child("posts").child(parts[i]);
+                //Log.d("created", postsRef.getKey());
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                }
-            });
+                postsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        Log.d("created", dataSnapshot.getKey());
+                        Post p = dataSnapshot.getValue(Post.class);
+                        number_likes += p.getNumLikes();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        System.out.println("The read failed: " + databaseError.getCode());
+                    }
+                });
+            }
         }
 
         int psts = sharedPref.getInt("NUM_POSTS", 0);
