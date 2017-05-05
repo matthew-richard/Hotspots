@@ -185,6 +185,8 @@ public class NewPostActivity extends AppCompatActivity implements
 
         public void writeNewPost(Post post) {
             String key = mDatabase.child("posts").push().getKey();
+
+            // Update shared prefs
             String created = sharedPref.getString("CREATED", "");
             SharedPreferences.Editor editor = sharedPref.edit();
             StringBuilder sb = new StringBuilder(created);

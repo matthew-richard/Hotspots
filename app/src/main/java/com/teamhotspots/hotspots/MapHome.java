@@ -178,6 +178,9 @@ public class MapHome extends Fragment
                         Float.parseFloat(getString(R.string.locationIconAnchorY)))
             );
 
+            // Mark this marker as not a hostpot
+            locationMarker.setTag("local");
+
             locationCircle = mMap.addCircle(new CircleOptions()
                     .center(latlng)
                     .fillColor(ContextCompat.getColor(getContext(), R.color.locationCircleFill))
@@ -266,6 +269,7 @@ public class MapHome extends Fragment
                 for (DataSnapshot child: dataSnapshot.getChildren()) {
                     Hotspot hotspot = child.getValue(Hotspot.class);
                     int index = hotspotKeys.indexOf(child.getKey());
+                    String key = child.getKey();
                     LatLng latlng = new LatLng(hotspot.lat, hotspot.lng);
 
                     // Create marker if necessary, otherwise update it
@@ -284,8 +288,12 @@ public class MapHome extends Fragment
                                 .strokeWidth(Float.parseFloat(getString(R.string.hotspotCircleStrokeWidth)))
                                 .radius(Float.parseFloat(getString(R.string.hotspotCircleRadius)));
 
-                        hotspotKeys.add(child.getKey());
+                        hotspotKeys.add(key);
                         hotspotMarkers.add(mMap.addMarker(marker));
+
+                        // Store hotspot key in marker tag
+                        hotspotMarkers.get(hotspotMarkers.size() - 1).setTag(key);
+
                         hotspotCircles.add(mMap.addCircle(circle));
                     }
                     else {
@@ -303,19 +311,11 @@ public class MapHome extends Fragment
 
     @Override
     public boolean onMarkerClick(final Marker marker) {
-        //go to feed
+        Fragment fragment = new Feed();
+        Bundle args = new Bundle();
+        args.putString("hotspotKey", (String) marker.getTag());
+        fragment.setArguments(args);
 
-        //get marker lat/lng
-        Fragment fragment = null;
-        Class fragmentClass = null;
-
-        fragmentClass = Feed.class;
-
-        try {
-            fragment = (Fragment) fragmentClass.newInstance();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
         return false;

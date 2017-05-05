@@ -54,7 +54,6 @@ public class Feed extends Fragment {
 
     private ValueEventListener hotspotValueListener;
     private ChildEventListener postsChildEventListener;
-    private ValueEventListener postsValueListener;
     private FirebaseListAdapter<Post> adapter;
 
     @Override
@@ -74,13 +73,14 @@ public class Feed extends Fragment {
         //community.setText("Johns Hopkins University");
 
 
-        // TODO: Get hotspot key from bundled arguments
-        Bundle b = getArguments();
-        String hotspotKey = "example-hotspot";
-        if (b != null) {
-            hotspotKey = b.getString("hotspotKey", "example-hotspot");
-        }
+        String hotspotKey = getArguments().getString("hotspotKey");
         final List<String> postKeys = new ArrayList<>();
+
+        // TODO: Populate local feed with local pins
+        // For now, we just display the feed for example-hotspot
+        if (hotspotKey.equals("local")) {
+            hotspotKey = "example-hotspot";
+        }
 
         hotspotValueListener = new ValueEventListener() {
             @Override
@@ -93,12 +93,8 @@ public class Feed extends Fragment {
             @Override
             public void onCancelled(DatabaseError databaseError) {}
         };
-
         mReference.child("hotspots").child(hotspotKey).addValueEventListener(hotspotValueListener);
 
-        // TODO: Switch to ChildEventListener to detect when posts are created/removed/edited
-        // This avoids iterating through every post. Do a SingleValueEventListener when the feed
-        // is created
 
         adapter = new FirebaseListAdapter<Post>(getActivity(), Post.class,
                 R.layout.post, mReference.child("posts").orderByKey()) {
@@ -195,18 +191,6 @@ public class Feed extends Fragment {
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 adapter.notifyDataSetChanged();
-            }
-        };
-
-        postsValueListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
             }
         };
         postsListView.setAdapter(adapter);
