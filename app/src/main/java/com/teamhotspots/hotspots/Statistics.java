@@ -74,24 +74,28 @@ public class Statistics extends Fragment {
         sharedPref = getActivity().getPreferences(MODE_PRIVATE);
 
         getActivity().getSharedPreferences("PREF", MODE_PRIVATE);
-        parts = pts.split(",");
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        final DatabaseReference postsRef = database.getReference();
-        postsRef.child("posts").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Post p = dataSnapshot.getValue(Post.class);
-                for (int i=0; i < parts.length; i++) {
-                    if (dataSnapshot.getKey() == parts[i]) {
-                        number_likes += p.getNumLikes();
+        if (pts != null) {
+            parts = pts.split(",");
+
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            final DatabaseReference postsRef = database.getReference();
+            postsRef.child("posts").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    Post p = dataSnapshot.getValue(Post.class);
+                    for (int i = 0; i < parts.length; i++) {
+                        if (dataSnapshot.getKey() == parts[i]) {
+                            number_likes += p.getNumLikes();
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
-        });
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                }
+            });
+        }
 
         int psts = sharedPref.getInt("NUM_POSTS", 0);
         int htspts = sharedPref.getInt("NUM_HTSPT", 0);
