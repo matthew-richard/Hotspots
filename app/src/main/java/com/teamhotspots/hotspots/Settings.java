@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
@@ -14,6 +15,7 @@ import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -166,7 +168,7 @@ public class Settings extends Fragment {
             int orientation = 0;
 
             try {
-                ExifInterface exif = new ExifInterface(mPhotoUri.getPath());
+                ExifInterface exif = new ExifInterface(getPath(mPhotoUri));
                 orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
                 Log.d("EXIF", "Exif: " + orientation);
             } catch (Exception e) {
@@ -179,6 +181,14 @@ public class Settings extends Fragment {
         } catch (NullPointerException exception) {}
     }
 
+    private String getPath(Uri uri) {
+        String[]  data = { MediaStore.Images.Media.DATA };
+        CursorLoader loader = new CursorLoader(getContext(), uri, data, null, null, null);
+        Cursor cursor = loader.loadInBackground();
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
+    }
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
