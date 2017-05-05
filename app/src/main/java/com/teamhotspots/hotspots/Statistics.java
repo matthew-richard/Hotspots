@@ -71,7 +71,7 @@ public class Statistics extends Fragment {
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
         navigationView.getMenu().getItem(2).setChecked(true);
 
-        sharedPref = getActivity().getSharedPreferences("PREF", MODE_PRIVATE);
+        sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
         String pts = sharedPref.getString(getString(R.string.liked_posts), "");
 
         if (pts != null) {
