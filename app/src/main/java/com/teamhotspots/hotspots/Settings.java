@@ -105,6 +105,12 @@ public class Settings extends Fragment {
                     filepath.putFile(mPhotoUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            SharedPreferences sharedPref = getActivity().getPreferences(MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPref.edit();
+                            String imageUrl = taskSnapshot.getDownloadUrl().toString();
+                            editor.putString("ICON_PATH", imageUrl);
+                            editor.commit();
+
 
                         }
                     });

@@ -1,6 +1,7 @@
 package com.teamhotspots.hotspots;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -11,7 +12,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import static android.content.Context.MODE_PRIVATE;
 
 
 /**
@@ -24,6 +35,10 @@ import android.widget.Toast;
  */
 public class Statistics extends Fragment {
     private OnFragmentInteractionListener mListener;
+    private int number_likes = 0;
+    private SharedPreferences sharedPref;
+    private String pts;
+    private String[] parts;
 
     public Statistics() {
         // Required empty public constructor
@@ -55,6 +70,38 @@ public class Statistics extends Fragment {
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
         navigationView.getMenu().getItem(2).setChecked(true);
 
+        sharedPref = getActivity().getPreferences(MODE_PRIVATE);
+        pts = sharedPref.getString("NUM_POINTS", "");
+        parts = pts.split(",");
+
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        final DatabaseReference postsRef = database.getReference();
+        postsRef.child("posts").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Post p = dataSnapshot.getValue(Post.class);
+                for (int i=0; i < parts.length; i++) {
+                    if (dataSnapshot.getKey() == parts[i]) {
+                        number_likes += p.getNumLikes();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
+
+        int psts = sharedPref.getInt("NUM_POSTS", 0);
+        int htspts = sharedPref.getInt("NUM_HTSPT", 0);
+
+        TextView points = (TextView) rootView.findViewById(R.id.stat_total_pts_num);
+        points.setText(Integer.toString(number_likes));
+
+        TextView posts = (TextView) rootView.findViewById(R.id.stat_total_posts_num);
+        posts.setText(Integer.toString(psts));
+
+        TextView hotspots = (TextView) rootView.findViewById(R.id.stat_hotspots_num);
+        hotspots.setText(Integer.toString(htspts));
 
         return rootView;
     }
