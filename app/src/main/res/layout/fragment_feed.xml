@@ -8,7 +8,7 @@
         android:id="@+id/feed_list"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:dividerHeight="10.0sp"
+        android:dividerHeight="0dp"
         android:divider="@android:color/transparent">
     </ListView>
 
