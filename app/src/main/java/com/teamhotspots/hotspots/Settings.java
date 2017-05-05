@@ -76,7 +76,7 @@ public class Settings extends Fragment {
         navigationView.getMenu().getItem(3).setChecked(true);
 
         final EditText et = (EditText) rootView.findViewById(R.id.set_user_enter);
-        SharedPreferences sharedPref = getActivity().getPreferences(MODE_PRIVATE);
+        SharedPreferences sharedPref = getActivity().getSharedPreferences("PREF", MODE_PRIVATE);
         final String username = sharedPref.getString(getString(R.string.username), "John Doe");
         et.setText(username);
         et.setSelection(et.getText().length());

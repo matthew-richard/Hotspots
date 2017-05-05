@@ -85,7 +85,8 @@ public class PhotoConfirm extends Fragment {
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mStorage = FirebaseStorage.getInstance().getReference();
-        sharedPref = getActivity().getPreferences(MODE_PRIVATE);
+        sharedPref = getActivity().getSharedPreferences("PREF", MODE_PRIVATE);
+
 
         if (getArguments() != null) {
             path = getArguments().getParcelable("path");

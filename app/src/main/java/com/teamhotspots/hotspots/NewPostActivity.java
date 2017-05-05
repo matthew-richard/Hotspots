@@ -81,7 +81,8 @@ public class NewPostActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_new_post);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        sharedPref = getPreferences(MODE_PRIVATE);
+        sharedPref = getSharedPreferences("PREF", MODE_PRIVATE);
+
 
         Window window = getWindow();
         window.setStatusBarColor(ContextCompat.getColor(this , R.color.black));
