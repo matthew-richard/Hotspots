@@ -42,6 +42,7 @@ import com.google.firebase.storage.UploadTask;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -119,6 +120,13 @@ public class PhotoConfirm extends Fragment {
         } catch (Exception e) {}
 
         bitmap = rotateImage(orientation, bitmap);
+
+        try {
+            OutputStream os= getContext().getContentResolver().openOutputStream(path);
+            bitmap.compress(Bitmap.CompressFormat.PNG,50,os);
+        } catch (Exception e) {
+        }
+
 
         ImageView photoView = (ImageView) rootView.findViewById(R.id.imageView6);
         //photoView.setImageURI(path);

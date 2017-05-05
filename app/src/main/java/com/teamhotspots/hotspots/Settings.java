@@ -32,8 +32,10 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 import static android.app.Activity.RESULT_OK;
 import static android.content.Context.MODE_PRIVATE;
@@ -82,6 +84,12 @@ public class Settings extends Fragment {
         final String username = sharedPref.getString(getString(R.string.username), "John Doe");
         et.setText(username);
         et.setSelection(et.getText().length());
+
+        String imgpath = sharedPref.getString("ICON_PATH", "anonymousIcon");
+        ImageView photoView = (ImageView) rootView.findViewById(R.id.icon);
+        if (!imgpath.equals("anonymousIcon")) {
+            Picasso.with(getContext()).load(imgpath).into(photoView);
+        }
 
         final Button button_cancel = (Button) rootView.findViewById(R.id.settings_btn_cancel);
         button_cancel.setOnClickListener(new View.OnClickListener() {
@@ -175,6 +183,12 @@ public class Settings extends Fragment {
             }
 
             bitmap = rotateImage(orientation, bitmap);
+
+            try {
+                OutputStream os= getContext().getContentResolver().openOutputStream(mPhotoUri);
+                bitmap.compress(Bitmap.CompressFormat.PNG,50,os);
+            } catch (Exception e) {
+            }
 
             ImageView photoView = (ImageView) getView().findViewById(R.id.icon);
             photoView.setImageBitmap(bitmap);
