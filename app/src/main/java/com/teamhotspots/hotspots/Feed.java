@@ -75,9 +75,11 @@ public class Feed extends Fragment {
 
 
         // TODO: Get hotspot key from bundled arguments
-        //Bundle b = getArguments();
-        //String hotspotKey = b.getString("hotspotKey");
+        Bundle b = getArguments();
         String hotspotKey = "example-hotspot";
+        if (b != null) {
+            hotspotKey = b.getString("hotspotKey", "example-hotspot");
+        }
         final List<String> postKeys = new ArrayList<>();
 
         hotspotValueListener = new ValueEventListener() {
@@ -151,7 +153,7 @@ public class Feed extends Fragment {
 
                         ImageView thumbIcon = (ImageView) v.findViewById(R.id.like_icon);
                         ThumbIconOnClickListener listener = new ThumbIconOnClickListener(p, thumbIcon, likes, getRef(position));
-                        String liked = getActivity().getPreferences(Context.MODE_PRIVATE).getString(getString(R.string.liked_posts), "");
+                        String liked = getActivity().getSharedPreferences(getString(R.string.pref), Context.MODE_PRIVATE).getString(getString(R.string.liked_posts), "");
                         List<String> liked_keys = Arrays.asList(liked.split(","));
 
                         if (liked_keys.contains(key)) {
@@ -300,7 +302,7 @@ public class Feed extends Fragment {
                 post.upvote();
                 thumbIcon.setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_ATOP);
 
-                SharedPreferences prefs = getActivity().getPreferences(Context.MODE_PRIVATE);
+                SharedPreferences prefs = getActivity().getSharedPreferences(getString(R.string.pref), Context.MODE_PRIVATE);
                 String liked = prefs.getString(getString(R.string.liked_posts), "");
                 StringBuilder sb = new StringBuilder(liked);
                 sb.append(ref.getKey() + ",");
@@ -313,7 +315,7 @@ public class Feed extends Fragment {
                 post.undoVote();
                 thumbIcon.clearColorFilter();
 
-                SharedPreferences prefs = getActivity().getPreferences(Context.MODE_PRIVATE);
+                SharedPreferences prefs = getActivity().getSharedPreferences(getString(R.string.pref), Context.MODE_PRIVATE);
                 String liked = prefs.getString(getString(R.string.liked_posts), "");
                 ArrayList<String> likedList = new ArrayList<String>(Arrays.asList(liked.split(",")));
                 likedList.remove(key);

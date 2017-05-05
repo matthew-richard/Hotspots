@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
-                SharedPreferences sharedPref =  getSharedPreferences("PREF", MODE_PRIVATE);
+                SharedPreferences sharedPref =  getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
                 String username = sharedPref.getString(getString(R.string.username), "John Doe");
                 TextView usernameTV = (TextView) findViewById(R.id.username);
                 usernameTV.setText(username);

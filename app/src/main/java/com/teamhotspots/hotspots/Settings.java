@@ -76,7 +76,7 @@ public class Settings extends Fragment {
         navigationView.getMenu().getItem(3).setChecked(true);
 
         final EditText et = (EditText) rootView.findViewById(R.id.set_user_enter);
-        SharedPreferences sharedPref = getActivity().getSharedPreferences("PREF", MODE_PRIVATE);
+        SharedPreferences sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
         final String username = sharedPref.getString(getString(R.string.username), "John Doe");
         et.setText(username);
         et.setSelection(et.getText().length());
@@ -95,7 +95,7 @@ public class Settings extends Fragment {
                     Toast.makeText(getActivity(), "Username cannot be empty",
                             Toast.LENGTH_LONG).show();
                 } else {
-                    SharedPreferences sharedPref = getActivity().getSharedPreferences("PREF", MODE_PRIVATE);
+                    SharedPreferences sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPref.edit();
                     editor.putString(getString(R.string.username), et.getText().toString());
                     editor.commit();
@@ -106,7 +106,7 @@ public class Settings extends Fragment {
                         filepath.putFile(mPhotoUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                SharedPreferences sharedPref = getActivity().getSharedPreferences("PREF", MODE_PRIVATE);
+                                SharedPreferences sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
                                 SharedPreferences.Editor editor = sharedPref.edit();
                                 String imageUrl = taskSnapshot.getDownloadUrl().toString();
                                 editor.putString("ICON_PATH", imageUrl);

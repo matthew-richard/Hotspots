@@ -16,5 +16,6 @@
     <string name="username">USERNAME</string>
 
     <!--Shared Preferences keys-->
+    <string name="pref">PREF</string>
     <string name="liked_posts">liked_posts</string>
 </resources>

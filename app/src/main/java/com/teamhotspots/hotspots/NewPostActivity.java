@@ -81,7 +81,7 @@ public class NewPostActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_new_post);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        sharedPref = getSharedPreferences("PREF", MODE_PRIVATE);
+        sharedPref = getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
 
 
         Window window = getWindow();
