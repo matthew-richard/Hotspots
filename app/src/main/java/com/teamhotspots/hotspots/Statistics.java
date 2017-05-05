@@ -44,7 +44,6 @@ import static com.teamhotspots.hotspots.R.layout.post;
  */
 public class Statistics extends Fragment {
     private OnFragmentInteractionListener mListener;
-    private int number_likes = 0;
     private SharedPreferences sharedPref;
     private String pts;
     private String[] parts;
@@ -72,7 +71,7 @@ public class Statistics extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_statistics, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_statistics, container, false);
 
         Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
         toolbar.setTitle("Statistics");
@@ -81,22 +80,31 @@ public class Statistics extends Fragment {
 
         sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
         String pts = sharedPref.getString("CREATED", "");
+        System.out.println(pts);
         Log.d("created", pts);
 
         if (!isEmpty(pts)) {
             parts = pts.split(",");
 
             final FirebaseDatabase database = FirebaseDatabase.getInstance();
-            for (int i = 0; i < parts.length; i++) {
-                DatabaseReference postsRef = database.getReference().child("posts").child(parts[i]);
+            //for (int i = 0; i < parts.length; i++) {
+                DatabaseReference postsRef = database.getReference().child("posts");
                 //Log.d("created", postsRef.getKey());
 
-                postsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                postsRef.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         Log.d("created", dataSnapshot.getKey());
-                        Post p = dataSnapshot.getValue(Post.class);
-                        number_likes += p.getNumLikes();
+                        int numLikes = 0;
+                        for (int i = 0; i < parts.length; i++) {
+                            Post p = dataSnapshot.child(parts[i]).getValue(Post.class);
+                            System.out.println(p.getMsg());
+                            System.out.println(p.getNumLikes());
+                            numLikes += p.getNumLikes();
+                        }
+
+                        TextView points = (TextView) rootView.findViewById(R.id.stat_total_pts_num);
+                        points.setText(Integer.toString(numLikes));
                     }
 
                     @Override
@@ -104,14 +112,11 @@ public class Statistics extends Fragment {
                         System.out.println("The read failed: " + databaseError.getCode());
                     }
                 });
-            }
+
         }
 
         int psts = sharedPref.getInt("NUM_POSTS", 0);
         int htspts = sharedPref.getInt("NUM_HTSPT", 0);
-
-        TextView points = (TextView) rootView.findViewById(R.id.stat_total_pts_num);
-        points.setText(Integer.toString(number_likes));
 
         TextView posts = (TextView) rootView.findViewById(R.id.stat_total_posts_num);
         posts.setText(Integer.toString(psts));

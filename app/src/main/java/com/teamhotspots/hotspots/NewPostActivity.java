@@ -151,7 +151,7 @@ public class NewPostActivity extends AppCompatActivity implements
                             getString(R.string.anonymous));
 
                     Switch sw = (Switch) rootView.findViewById(R.id.switch1);
-                    if (!sw.isChecked()) {
+                    if (sw.isChecked()) {
                         username = getString(R.string.anonymous);
                     }
 
