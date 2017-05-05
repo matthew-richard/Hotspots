@@ -55,12 +55,22 @@ import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.gms.maps.model.TileProvider;
 import com.google.android.gms.maps.model.UrlTileProvider;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
 // TODO: Hide MyLocation button when current location is within view
+// TODO: When map is in 2D mode, anchor marker icons at center rather than bottom
+//       Or set 3D mode as the default
+// TODO: Index posts by latitude/longitude (truncate to particular decimal place) in Firebase
+// TODO: Set Activity title to "Hotspots", with the flame icon.
+// TODO: Don't draw chat icon when within range of a hotspot - just display the hotspot as "glowing"
 
 public class MapHome extends Fragment
         implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, LocationListener
@@ -74,6 +84,8 @@ public class MapHome extends Fragment
     private Circle locationCircle;
     private ArrayList<Marker> hotspotMarkers;
     private ArrayList<Circle> hotspotCircles;
+    private ArrayList<String> hotspotKeys;
+    private DatabaseReference mReference;
 
     private static View mapView;
     private static GoogleApiClient googleApiClient;
@@ -85,6 +97,14 @@ public class MapHome extends Fragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mReference = FirebaseDatabase.getInstance().getReference();
+        locationMarker = null;
+        locationCircle = null;
+        hotspotMarkers = new ArrayList<>();
+        hotspotCircles = new ArrayList<>();
+        hotspotKeys = new ArrayList<>();
+
 
         /* Initialize googleApiClient */
         if (googleApiClient == null) {
@@ -111,11 +131,6 @@ public class MapHome extends Fragment
                 .addApi(LocationServices.API)
                 .build();
         }
-
-        locationMarker = null;
-        locationCircle = null;
-        hotspotMarkers = new ArrayList<>();
-        hotspotCircles = new ArrayList<>();
     }
 
     public void tryRequestingLocationUpdates() {
@@ -224,11 +239,9 @@ public class MapHome extends Fragment
 
     @Override
     public void onMapReady(GoogleMap map) {
-        // TODO: Check if this is the first time onMapReady() is running before drawing markers
-        // Figure out when onMapReady() even runs. It seems to run every time the fragment returns
-        // to view...
 
-        // TODO: Set Activity title to "Hotspots", with the flame icon.
+        // Ignore future calls to onMapReady
+        if (mMap != null) return;
 
         mMap = map;
 
@@ -240,51 +253,53 @@ public class MapHome extends Fragment
         // Set a listener for marker click.
         mMap.setOnMarkerClickListener(this);
 
-        // Data markers:
-        // - Fetch all pins in local (relative to user) area, display in feed
-        // - Fetch all hotspots visible on the map (onMapCameraMove?), display on map, with radii
+        // Display hotspots on map
+        // TODO: Use ChildEventListener instead
+        // TODO: Use onCameraMove to change the region of hotspots we listen to based on current camera position
+        mReference.child("hotspots").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Bitmap ic = getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_whatshot);
+                Bitmap resized_ic = Bitmap.createScaledBitmap(ic, 200, 200, false);
 
-        //populate map
-        //for each Hotspot, if within our map bounds, then create Hotspot marker
+                // Create hotspot markers if necessary, update with new location
+                for (DataSnapshot child: dataSnapshot.getChildren()) {
+                    Hotspot hotspot = child.getValue(Hotspot.class);
+                    int index = hotspotKeys.indexOf(child.getKey());
+                    LatLng latlng = new LatLng(hotspot.lat, hotspot.lng);
 
-        //for each Hotspot in Database, get lat/lng coordinates
-        float lat = 0;
-        float lng = 0;
+                    // Create marker if necessary, otherwise update it
+                    if (index < 0) {
+                        MarkerOptions marker = new MarkerOptions()
+                                .position(latlng)
+                                .title("hotspot")
+                                .icon(BitmapDescriptorFactory.fromBitmap(resized_ic))
+                                .anchor(Float.parseFloat(getString(R.string.hotspotIconAnchorX)),
+                                        Float.parseFloat(getString(R.string.hotspotIconAnchorY)));
 
-        LatLngBounds curScreen = mMap.getProjection()
-                .getVisibleRegion().latLngBounds;
+                        CircleOptions circle = new CircleOptions()
+                                .center(marker.getPosition())
+                                .fillColor(ContextCompat.getColor(getContext(), R.color.hotspotCircleFill))
+                                .strokeColor(ContextCompat.getColor(getContext(), R.color.hotspotCircleStroke))
+                                .strokeWidth(Float.parseFloat(getString(R.string.hotspotCircleStrokeWidth)))
+                                .radius(Float.parseFloat(getString(R.string.hotspotCircleRadius)));
 
-        /*if (curScreen.contains(mylatlng)) {
+                        hotspotKeys.add(child.getKey());
+                        hotspotMarkers.add(mMap.addMarker(marker));
+                        hotspotCircles.add(mMap.addCircle(circle));
+                    }
+                    else {
+                        hotspotMarkers.get(index).setPosition(latlng);
+                        hotspotCircles.get(index).setCenter(latlng);
+                        // TODO: Set other hotspot details, like hotspot title
+                    }
+                }
+            }
 
-        }*/
-
-        MarkerOptions marker2 = new MarkerOptions().position(new LatLng(39.329159, -76.618424)).title("hotspot");
-        Bitmap ic2 = getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_whatshot);
-        Bitmap resized_ic2 = Bitmap.createScaledBitmap(ic2, 200, 200, false);
-        marker2.icon(BitmapDescriptorFactory.fromBitmap(resized_ic2))
-                .anchor(Float.parseFloat(getString(R.string.hotspotIconAnchorX)),
-                        Float.parseFloat(getString(R.string.hotspotIconAnchorY)));
-        hotspotMarkers.add(mMap.addMarker(marker2));
-
-        MarkerOptions marker3 = new MarkerOptions().position(new LatLng(39.326702, -76.620296)).title("hotspot2");
-        Bitmap ic3 = getBitmapFromVectorDrawable(getActivity(), R.drawable.ic_whatshot);
-        Bitmap resized_ic3 = Bitmap.createScaledBitmap(ic3, 200, 200, false);
-        marker3.icon(BitmapDescriptorFactory.fromBitmap(resized_ic3))
-               .anchor(Float.parseFloat(getString(R.string.hotspotIconAnchorX)),
-                       Float.parseFloat(getString(R.string.hotspotIconAnchorY)));
-        hotspotMarkers.add(mMap.addMarker(marker3));
-
-        for (int i = 0 ; i < hotspotMarkers.size(); i++) {
-            hotspotCircles.add(mMap.addCircle(new CircleOptions()
-                    .center(hotspotMarkers.get(i).getPosition())
-                    .fillColor(ContextCompat.getColor(getContext(), R.color.hotspotCircleFill))
-                    .strokeColor(ContextCompat.getColor(getContext(), R.color.hotspotCircleStroke))
-                    .strokeWidth(Float.parseFloat(getString(R.string.hotspotCircleStrokeWidth)))
-                    .radius(Float.parseFloat(getString(R.string.hotspotCircleRadius)))));
-        }
-
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
     }
-
 
     @Override
     public boolean onMarkerClick(final Marker marker) {
