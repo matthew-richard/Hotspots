@@ -41,8 +41,11 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -184,7 +187,7 @@ public class NewPostActivity extends AppCompatActivity implements
         }
 
         public void writeNewPost(Post post) {
-            String key = mDatabase.child("posts").push().getKey();
+            final String key = mDatabase.child("posts").push().getKey();
 
             // Update shared prefs
             String created = sharedPref.getString("CREATED", "");
@@ -196,6 +199,23 @@ public class NewPostActivity extends AppCompatActivity implements
 
             // TODO: If post is in hotspot's range, update that hotspot's list of posts
             // e.g. hotspot.child("posts").push().setValue(postId)
+            final String hotspotKey = "example-hotspot"; //TODO: Change this to an actual hotspot
+            final DatabaseReference hotspots = mDatabase.child("hotspots");
+            ValueEventListener addValueEventListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    Hotspot h = dataSnapshot.child(hotspotKey).getValue(Hotspot.class);
+                    h.addPost(key);
+                    hotspots.child(hotspotKey).setValue(h);
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            };
+
+            hotspots.addListenerForSingleValueEvent(addValueEventListener);
 
             Map<String, Object> postValues = post.toMap();
 

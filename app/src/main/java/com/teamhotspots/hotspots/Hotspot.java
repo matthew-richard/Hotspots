@@ -17,4 +17,8 @@ public class Hotspot {
         this.lng = lng;
         this.posts = posts;
     }
+
+    public void addPost(String key) {
+        posts.add(key);
+    }
 }
