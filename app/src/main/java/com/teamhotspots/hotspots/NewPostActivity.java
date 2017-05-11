@@ -104,6 +104,30 @@ public class NewPostActivity extends AppCompatActivity implements
 
     }
 
+    public void writeNewPost(Post post) {
+        // Push the post details
+        final DatabaseReference newPost = mDatabase.child("posts").push();
+        newPost.setValue(post);
+
+        // TODO: If post is in hotspot's range, update that hotspot's list of posts
+
+        // e.g. hotspot.child("posts").push().setValue(postId)
+        final String hotspotKey = "example-hotspot"; //TODO: Change this to an actual hotspot
+
+        // To store a hotspot's list of posts, we store the post IDs as keys and 'true'
+        // as the value. This is the recommended way to lists of keys in Firebase, see:
+        // https://firebase.google.com/docs/database/android/structure-data
+        mDatabase.child("hotspots/" + hotspotKey + "/posts").child(newPost.getKey()).setValue(true);
+
+        // Update user activity (stored in shared prefs)
+        String created = sharedPref.getString("CREATED", "");
+        SharedPreferences.Editor editor = sharedPref.edit();
+        StringBuilder sb = new StringBuilder(created);
+        sb.append(newPost.getKey() + ",");
+        editor.putString("CREATED", sb.toString());
+        editor.commit();
+    }
+
     /**
      * A placeholder fragment containing a simple view.
      */
@@ -173,7 +197,9 @@ public class NewPostActivity extends AppCompatActivity implements
                         }
                         double lat = location.getLatitude();
                         double lng = location.getLongitude();
-                        writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp, lat, lng));
+                        ((NewPostActivity) getActivity())
+                                .writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp,
+                                        lat, lng));
                     } catch (SecurityException e) {
                         Toast.makeText(getActivity(), "Should add location permission, post not uploaded.", Toast.LENGTH_LONG).show();
                     }
@@ -184,45 +210,6 @@ public class NewPostActivity extends AppCompatActivity implements
             });
 
             return rootView;
-        }
-
-        public void writeNewPost(Post post) {
-            final String key = mDatabase.child("posts").push().getKey();
-
-            // Update shared prefs
-            String created = sharedPref.getString("CREATED", "");
-            SharedPreferences.Editor editor = sharedPref.edit();
-            StringBuilder sb = new StringBuilder(created);
-            sb.append(key + ",");
-            editor.putString("CREATED", sb.toString());
-            editor.commit();
-
-            // TODO: If post is in hotspot's range, update that hotspot's list of posts
-            // e.g. hotspot.child("posts").push().setValue(postId)
-            final String hotspotKey = "example-hotspot"; //TODO: Change this to an actual hotspot
-            final DatabaseReference hotspots = mDatabase.child("hotspots");
-            ValueEventListener addValueEventListener = new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    Hotspot h = dataSnapshot.child(hotspotKey).getValue(Hotspot.class);
-                    h.addPost(key);
-                    hotspots.child(hotspotKey).setValue(h);
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            };
-
-            hotspots.addListenerForSingleValueEvent(addValueEventListener);
-
-            Map<String, Object> postValues = post.toMap();
-
-            Map<String, Object> childUpdates = new HashMap<>();
-            childUpdates.put("/posts/" + key, postValues);
-
-            mDatabase.updateChildren(childUpdates);
         }
     }
 

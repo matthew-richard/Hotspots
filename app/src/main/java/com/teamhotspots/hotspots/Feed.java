@@ -24,6 +24,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.ui.database.FirebaseIndexListAdapter;
 import com.firebase.ui.database.FirebaseListAdapter;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -74,7 +75,6 @@ public class Feed extends Fragment {
 
 
         String hotspotKey = getArguments().getString("hotspotKey");
-        final List<String> postKeys = new ArrayList<>();
 
         // TODO: Populate local feed with local pins
         // For now, we just display the feed for example-hotspot
@@ -86,8 +86,7 @@ public class Feed extends Fragment {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Hotspot h = dataSnapshot.getValue(Hotspot.class);
-                postKeys.clear();
-                postKeys.addAll(h.posts);
+                // Handle hotspot update, e.g. title change
             }
 
             @Override
@@ -96,72 +95,60 @@ public class Feed extends Fragment {
         mReference.child("hotspots").child(hotspotKey).addValueEventListener(hotspotValueListener);
 
 
-        adapter = new FirebaseListAdapter<Post>(getActivity(), Post.class,
-                R.layout.post, mReference.child("posts").orderByKey()) {
+        adapter = new FirebaseIndexListAdapter<Post>(getActivity(), Post.class,
+                R.layout.post, mReference.child("hotspots/" + hotspotKey + "/posts"),
+                mReference.child("posts"))
+        {
             @Override
-            protected void populateView(View v, Post p, int position) {}
-
-            @Override
-            public View getView(int position, View view, ViewGroup viewGroup) {
+            protected void populateView(View v, Post p, int position) {
                 String key = getRef(position).getKey();
-                LayoutInflater inflater = getActivity().getLayoutInflater();
-                Post p = getItem(position);
 
-                View v = inflater.inflate(R.layout.post, null);
-
-                if (postKeys.contains(key)) {
-                    if (p != null) {
-                        TextView username = (TextView) v.findViewById(R.id.username);
-                        ImageView picture = (ImageView) v.findViewById(R.id.picture);
-                        ImageView icon = (ImageView) v.findViewById(R.id.user_icon);
-                        TextView message = (TextView) v.findViewById(R.id.message);
-                        TextView likes = (TextView) v.findViewById(R.id.likes);
-                        if (username != null) {
-                            username.setText(p.getUsername());
-                        }
-
-                        if (p.getUsername().equals(getString(R.string.anonymous)) || p.getUsericon().equals("anonymousIcon")) {
-                            icon.setImageResource(R.drawable.ic_person_outline_black_24dp);
-                        } else {
-                            //may need to format size
-                            Picasso.with(getContext()).load(p.getUsericon()).into(icon);
-                        }
-
-                        if (picture != null && p.isPicturePost()) {
-                            Picasso.with(getContext()).load(p.getImageUrl()).into(picture);
-                            picture.setVisibility(View.VISIBLE);
-                            ViewGroup.LayoutParams params = picture.getLayoutParams();
-                            params.height = dpToPx(getActivity().getApplicationContext(), 200);
-                        } else if (picture!= null && !p.isPicturePost()) {
-                            picture.setVisibility(View.GONE);
-                            picture.setBackgroundResource(0);
-                            ViewGroup.LayoutParams params = picture.getLayoutParams();
-                            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                        }
-
-                        if (message != null) {
-                            message.setText(p.getMsg());
-                        }
-
-                        if (likes != null) {
-                            likes.setText("" + p.getNumLikes());
-                        }
-
-                        ImageView thumbIcon = (ImageView) v.findViewById(R.id.like_icon);
-                        ThumbIconOnClickListener listener = new ThumbIconOnClickListener(p, thumbIcon, likes, getRef(position));
-                        String liked = getActivity().getSharedPreferences(getString(R.string.pref), Context.MODE_PRIVATE).getString(getString(R.string.liked_posts), "");
-                        List<String> liked_keys = Arrays.asList(liked.split(","));
-
-                        if (liked_keys.contains(key)) {
-                            listener.setClicked();
-                        }
-
-                        thumbIcon.setOnClickListener(listener);
-                    }
-                    return v;
-                } else {
-                    return new View(getActivity().getApplicationContext());
+                TextView username = (TextView) v.findViewById(R.id.username);
+                ImageView picture = (ImageView) v.findViewById(R.id.picture);
+                ImageView icon = (ImageView) v.findViewById(R.id.user_icon);
+                TextView message = (TextView) v.findViewById(R.id.message);
+                TextView likes = (TextView) v.findViewById(R.id.likes);
+                if (username != null) {
+                    username.setText(p.getUsername());
                 }
+
+                if (p.getUsername().equals(getString(R.string.anonymous)) || p.getUsericon().equals("anonymousIcon")) {
+                    icon.setImageResource(R.drawable.ic_person_outline_black_24dp);
+                } else {
+                    //may need to format size
+                    Picasso.with(getContext()).load(p.getUsericon()).into(icon);
+                }
+
+                if (picture != null && p.isPicturePost()) {
+                    Picasso.with(getContext()).load(p.getImageUrl()).into(picture);
+                    picture.setVisibility(View.VISIBLE);
+                    ViewGroup.LayoutParams params = picture.getLayoutParams();
+                    params.height = dpToPx(getActivity().getApplicationContext(), 200);
+                } else if (picture!= null && !p.isPicturePost()) {
+                    picture.setVisibility(View.GONE);
+                    picture.setBackgroundResource(0);
+                    ViewGroup.LayoutParams params = picture.getLayoutParams();
+                    params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                }
+
+                if (message != null) {
+                    message.setText(p.getMsg());
+                }
+
+                if (likes != null) {
+                    likes.setText("" + p.getNumLikes());
+                }
+
+                ImageView thumbIcon = (ImageView) v.findViewById(R.id.like_icon);
+                ThumbIconOnClickListener listener = new ThumbIconOnClickListener(p, thumbIcon, likes, getRef(position));
+                String liked = getActivity().getSharedPreferences(getString(R.string.pref), Context.MODE_PRIVATE).getString(getString(R.string.liked_posts), "");
+                List<String> liked_keys = Arrays.asList(liked.split(","));
+
+                if (liked_keys.contains(key)) {
+                    listener.setClicked();
+                }
+
+                thumbIcon.setOnClickListener(listener);
             }
         };
 

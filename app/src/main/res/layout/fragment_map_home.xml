@@ -57,7 +57,7 @@
         android:clickable="true"
         android:tint="#000000"
         app:backgroundTint="@color/myLocationButtonBackground"
-        app:fabSize="normal"
+        app:fabSize="mini"
         app:srcCompat="@drawable/ic_my_map" />
 
 </FrameLayout>

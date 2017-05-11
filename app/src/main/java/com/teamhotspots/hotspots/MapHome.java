@@ -253,6 +253,12 @@ public class MapHome extends Fragment
         mMap.setIndoorEnabled(false);
         mMap.setMapStyle(new MapStyleOptions(getString(R.string.mapStyle)));
 
+        // Tilt camera
+        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(
+                CameraPosition.builder(mMap.getCameraPosition())
+                        .tilt(Float.parseFloat(getString(R.string.defaultCameraTiltDegrees)))
+                        .build()));
+
         // Set a listener for marker click.
         mMap.setOnMarkerClickListener(this);
 

@@ -208,13 +208,15 @@ public class PhotoConfirm extends Fragment {
                 lat = location.getLatitude();
 
                 //image
+                final NewPostActivity activity = (NewPostActivity) getActivity();
                 StorageReference filepath = mStorage.child("Photos").child(path.getLastPathSegment());
                 filepath.putFile(path).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                         imageUrl = taskSnapshot.getDownloadUrl().toString();
 
-                        writeNewPost();
+                        activity.writeNewPost(
+                                new Post(username, msg, imageUrl, usericon, timeStamp, lat, lng));
 
                     }
                 });
@@ -226,25 +228,6 @@ public class PhotoConfirm extends Fragment {
         return rootView;
     }
 
-    private void writeNewPost() {
-        String key = mDatabase.child("posts").push().getKey();
-        String created = sharedPref.getString("CREATED", "");
-        SharedPreferences.Editor editor = sharedPref.edit();
-        StringBuilder sb = new StringBuilder(created);
-        sb.append(key + ",");
-        editor.putString("CREATED", sb.toString());
-        editor.commit();
-
-        Post post = new Post(username, msg, imageUrl, usericon, timeStamp, lat, lng);
-        Map<String, Object> postValues = post.toMap();
-
-        Map<String, Object> childUpdates = new HashMap<>();
-        childUpdates.put("/posts/" + key, postValues);
-
-        mDatabase.updateChildren(childUpdates);
-
-    }
-
     private String getPath(Uri uri) {
         String[]  data = { MediaStore.Images.Media.DATA };
         CursorLoader loader = new CursorLoader(getContext(), uri, data, null, null, null);
@@ -252,16 +235,6 @@ public class PhotoConfirm extends Fragment {
         int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
         cursor.moveToFirst();
         return cursor.getString(column_index);
-    }
-
-    public void writeNewPost(Post post) {
-        String key = mDatabase.child("posts").push().getKey();
-        Map<String, Object> postValues = post.toMap();
-
-        Map<String, Object> childUpdates = new HashMap<>();
-        childUpdates.put("/posts/" + key, postValues);
-
-        mDatabase.updateChildren(childUpdates);
     }
 
     //TODO: write a Hotspot to database if this post has 5 posts that are <25 meters away

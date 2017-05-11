@@ -1,5 +1,6 @@
 package com.teamhotspots.hotspots;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -9,16 +10,16 @@ import java.util.List;
 public class Hotspot {
     public double lat;
     public double lng;
-    public List<String> posts;
+    public HashMap<String, Boolean> posts;
 
     public Hotspot() {}
-    public Hotspot(double lat, double lng, List<String> posts) {
+    public Hotspot(double lat, double lng, HashMap<String, Boolean> posts) {
         this.lat = lat;
         this.lng = lng;
         this.posts = posts;
     }
 
     public void addPost(String key) {
-        posts.add(key);
+        posts.put(key, true);
     }
 }
