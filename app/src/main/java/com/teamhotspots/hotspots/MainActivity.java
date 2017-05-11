@@ -18,6 +18,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -118,43 +119,36 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         Fragment fragment = null;
-        Class fragmentClass = null;
         boolean newActivityStarted = false;
-        boolean addToBackStack = true;
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
 
         if (id == R.id.nav_home) {
-            fragmentClass = MapHome.class;
-            addToBackStack = false;
+            setTitle(item.getTitle());
+            fragmentManager.beginTransaction()
+                    .replace(R.id.content_frame, mapFragment)
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
+                    .addToBackStack(null)
+                    .commit();
         } else if (id == R.id.nav_new_pin) {
             Intent intent = new Intent(this, NewPostActivity.class);
             startActivity(intent);
             newActivityStarted = true;
         } else if (id == R.id.nav_statistics) {
-            fragmentClass = Statistics.class;
+            fragment = new Statistics();
         } else if (id == R.id.nav_settings) {
-            fragmentClass = Settings.class;
-        }
-
-        try {
-            fragment = (Fragment) fragmentClass.newInstance();
-        } catch (Exception e) {
-
-            e.printStackTrace();
+            fragment = new Settings();
         }
 
         // Insert the fragment by replacing any existing fragment
-        if (fragmentClass != null) {
+        if (fragment != null) {
             setTitle(item.getTitle());
 
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            if (addToBackStack) {
-                fragmentManager.beginTransaction().replace(R.id.content_frame, fragment)
-                        .addToBackStack(fragmentClass.getName()).commit();
-            }
-            else {
-                // Pop entire back stack (only occurs when when "home" is selected)
-                fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            }
+            fragmentManager.beginTransaction()
+                    .replace(R.id.content_frame, fragment)
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                    .addToBackStack(null)
+                    .commit();
         }
 
         // Close the navigation drawer

@@ -21,6 +21,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.AppCompatDrawableManager;
@@ -207,22 +208,22 @@ public class MapHome extends Fragment
             if (parent != null)
                 parent.removeView(mapView);
         }
+
         try {
             mapView = inflater.inflate(R.layout.fragment_map_home, container, false);
+
+            SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
+                    .findFragmentById(R.id.map);
+            mapFragment.getMapAsync(this);
+            mapView.findViewById(R.id.my_location_button).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    centerOnMyLocation();
+                }
+            });
         } catch (InflateException e) {
             /* map is already there, just return view as it is */
         }
-
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-
-        mapView.findViewById(R.id.my_location_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                centerOnMyLocation();
-            }
-        });
 
         Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
         toolbar.setTitle("Home");
@@ -242,10 +243,6 @@ public class MapHome extends Fragment
 
     @Override
     public void onMapReady(GoogleMap map) {
-
-        // Ignore future calls to onMapReady
-        if (mMap != null) return;
-
         mMap = map;
 
         // Map settings (besides those that are set in fragment_map_home.xml)
@@ -323,7 +320,11 @@ public class MapHome extends Fragment
         fragment.setArguments(args);
 
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
+        fragmentManager.beginTransaction()
+                .replace(R.id.content_frame, fragment)
+                .addToBackStack(null)
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .commit();
         return false;
     }
 

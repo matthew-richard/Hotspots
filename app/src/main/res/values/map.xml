@@ -13,7 +13,7 @@
     <string name="hotspotCircleStrokeWidth">5</string>
 
     <!-- Angle is relative to the nadir (line perpendicular to ground) -->
-    <string name="defaultCameraTiltDegrees">80</string>
+    <string name="defaultCameraTiltDegrees">45</string>
 
     <!-- Map JSON style generated from https://mapstyle.withgoogle.com/  -->
     <string name="mapStyle">
