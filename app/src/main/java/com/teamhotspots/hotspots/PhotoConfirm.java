@@ -1,5 +1,7 @@
 package com.teamhotspots.hotspots;
 
+import android.*;
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -177,41 +179,45 @@ public class PhotoConfirm extends Fragment {
 
                 if ( Build.VERSION.SDK_INT >= 23 &&
                         ContextCompat.checkSelfPermission( getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION )
-                                != PackageManager.PERMISSION_GRANTED) {
+                                == PackageManager.PERMISSION_GRANTED) {
 
-                }
+                    LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+                    final LocationListener locationListener = new LocationListener() {
+                        @Override
+                        public void onLocationChanged(Location location) {
+                            lat = location.getLatitude();
+                            lng = location.getLongitude();
+                        }
 
-                LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-                final LocationListener locationListener = new LocationListener() {
-                    @Override
-                    public void onLocationChanged(Location location) {
-                        lat = location.getLatitude();
-                        lng = location.getLongitude();
+                        @Override
+                        public void onStatusChanged(String dks, int nds, Bundle fdksl) {
+                        }
+
+                        @Override
+                        public void onProviderEnabled(String temp) {
+                        }
+
+                        @Override
+                        public void onProviderDisabled(String temp) {
+                        }
+
+                    };
+                    lm.requestLocationUpdates(
+                            LocationManager.NETWORK_PROVIDER, 5000, 10, locationListener);
+                    Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    if (location == null) {
+                        location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                     }
-                    @Override
-                    public void onStatusChanged(String dks, int nds, Bundle fdksl) { }
-
-                    @Override
-                    public void onProviderEnabled(String temp) { }
-
-                    @Override
-                    public void onProviderDisabled(String temp) { }
-
-                };
-                lm.requestLocationUpdates(
-                        LocationManager.NETWORK_PROVIDER, 5000, 10, locationListener);
-                Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                if (location == null) {
-                    location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    lng = location.getLongitude();
+                    lat = location.getLatitude();
                 }
-                lng = location.getLongitude();
-                lat = location.getLatitude();
 
                 //image
                 final NewPostActivity activity = (NewPostActivity) getActivity();
                 StorageReference filepath = mStorage.child("Photos").child(path.getLastPathSegment());
                 filepath.putFile(path).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
+                    @SuppressWarnings("VisibleForTests")
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                         imageUrl = taskSnapshot.getDownloadUrl().toString();
 

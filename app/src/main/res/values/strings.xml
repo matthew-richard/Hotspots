@@ -33,6 +33,7 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+    <string name="permission_rationale_external">External Storage Permissions needed to save pictures</string>
     <string name="TAG">LoginActivity</string>
 
     <!--Radio buttons-->

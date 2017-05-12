@@ -1,20 +1,26 @@
 package com.teamhotspots.hotspots;
 
+import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -37,6 +43,7 @@ import com.squareup.picasso.Picasso;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.app.Activity.RESULT_OK;
 import static android.content.Context.MODE_PRIVATE;
 
@@ -53,6 +60,9 @@ public class Settings extends Fragment {
     private OnFragmentInteractionListener mListener;
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_IMAGE_PICKER = 2;
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
+    private boolean permission = false;
+
     Uri mPhotoUri;
     private StorageReference mStorage;
 
@@ -78,6 +88,8 @@ public class Settings extends Fragment {
         toolbar.setTitle("Settings");
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
         navigationView.getMenu().getItem(3).setChecked(true);
+
+        mRequestExternal();
 
         final EditText et = (EditText) rootView.findViewById(R.id.set_user_enter);
         SharedPreferences sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
@@ -115,6 +127,7 @@ public class Settings extends Fragment {
 
                         filepath.putFile(mPhotoUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                             @Override
+                            @SuppressWarnings("VisibleForTests")
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 SharedPreferences sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
                                 SharedPreferences.Editor editor = sharedPref.edit();
@@ -135,11 +148,15 @@ public class Settings extends Fragment {
         photoLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                mPhotoUri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        new ContentValues());
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mPhotoUri);
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                if (permission) {
+                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    mPhotoUri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                            new ContentValues());
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mPhotoUri);
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                } else {
+                    Toast.makeText(getContext(), "Require External Storage Permissions!", Toast.LENGTH_SHORT);
+                }
             }
         });
 
@@ -147,10 +164,15 @@ public class Settings extends Fragment {
         galleryLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_PICK,
+                if (permission) {
+                    Intent intent = new Intent(Intent.ACTION_PICK,
                         MediaStore.Images.Media.INTERNAL_CONTENT_URI);
-                intent.setType("image/*");
-                startActivityForResult(intent, REQUEST_IMAGE_PICKER);
+                    intent.setType("image/*");
+                    startActivityForResult(intent, REQUEST_IMAGE_PICKER);
+                } else {
+                    Toast.makeText(getContext(), "Require External Storage Permissions!", Toast.LENGTH_SHORT);
+                }
+
             }
         });
 
@@ -160,6 +182,40 @@ public class Settings extends Fragment {
 
         return rootView;
     }
+
+    private void mRequestExternal() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            permission = true;
+        } else if (ContextCompat.checkSelfPermission(getActivity(), WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            permission = true;
+        } else if (shouldShowRequestPermissionRationale(WRITE_EXTERNAL_STORAGE)) {
+            Snackbar.make(getActivity().findViewById(android.R.id.content)
+                    , R.string.permission_rationale_external, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(android.R.string.ok, new View.OnClickListener() {
+                        @Override
+                        @TargetApi(Build.VERSION_CODES.M)
+                        public void onClick(View v) {
+                            requestPermissions(new String[]{WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+                        }
+                    });
+        } else {
+            requestPermissions(new String[]{WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+        }
+    }
+
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        if (requestCode == MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE) {
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                permission = true;
+            }
+        }
+    }
+
 
     @Override
     public void onResume() {

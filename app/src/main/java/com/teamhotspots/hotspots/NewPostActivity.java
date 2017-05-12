@@ -1,6 +1,7 @@
 package com.teamhotspots.hotspots;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
@@ -16,6 +17,8 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -54,6 +57,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static android.Manifest.permission.READ_CONTACTS;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.provider.MediaStore.AUTHORITY;
 import static java.lang.System.exit;
 
@@ -61,9 +66,9 @@ public class NewPostActivity extends AppCompatActivity implements
         PhotoConfirm.OnFragmentInteractionListener
 {
     private static DatabaseReference mDatabase;
-    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
-
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
     private static SharedPreferences sharedPref;
+    private boolean permission = false;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -99,10 +104,49 @@ public class NewPostActivity extends AppCompatActivity implements
             e.printStackTrace();
         }
 
+
+
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction().replace(R.id.main_content, fragment).commit();
 
+        mRequestExternal();
+
     }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private void mRequestExternal() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            permission = true;
+        } else if (ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            permission = true;
+        } else if (shouldShowRequestPermissionRationale(WRITE_EXTERNAL_STORAGE)) {
+            Snackbar.make(this.findViewById(android.R.id.content)
+                    , R.string.permission_rationale_external, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(android.R.string.ok, new View.OnClickListener() {
+                        @Override
+                        @TargetApi(Build.VERSION_CODES.M)
+                        public void onClick(View v) {
+                            requestPermissions(new String[]{WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+                        }
+                    });
+        } else {
+            requestPermissions(new String[]{WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+        }
+    }
+
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        if (requestCode == MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE) {
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                permission = true;
+            }
+        }
+    }
+
 
     public void writeNewPost(Post post) {
         // Push the post details
@@ -242,6 +286,11 @@ public class NewPostActivity extends AppCompatActivity implements
             View rootView = inflater.inflate(R.layout.fragment_photo, container, false);
             mView = rootView;
 
+            if (ContextCompat.checkSelfPermission(getContext(), WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(getContext(), "Need Storage Permissions!", Toast.LENGTH_SHORT).show();
+                getActivity().finish();
+            }
+
             final Button button_cancel = (Button) rootView.findViewById(R.id.button2);
             button_cancel.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
@@ -254,7 +303,6 @@ public class NewPostActivity extends AppCompatActivity implements
             camera.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    checkPermission();
                     Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     mPhotoUri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                             new ContentValues());
@@ -313,18 +361,10 @@ public class NewPostActivity extends AppCompatActivity implements
             }
         }
 
-        public void checkPermission() {
-            if (ContextCompat.checkSelfPermission(getActivity(),
-            Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-                ActivityCompat.requestPermissions(getActivity(),
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-            }
-        }
-
     }
+
+
+
 
 
     public static class NewPostTab extends Fragment {

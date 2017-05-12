@@ -34,20 +34,24 @@
 
         <TextView
             android:id="@+id/textView2"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_weight=".55"
             android:gravity="right|center_vertical"
             android:paddingRight="10dp"
             android:text="Sign out"
             android:textColor="#ffffff"
-            android:textSize="24sp" />
+            android:textSize="16sp" />
 
         <ImageView
             android:id="@+id/imageView2"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_weight=".45"
+            android:adjustViewBounds="true"
+            android:gravity="left|center_vertical"
+            android:maxHeight="18dp"
+            android:maxWidth="18dp"
             android:scaleType="fitStart"
             app:srcCompat="@mipmap/sign_out" />
     </LinearLayout>
