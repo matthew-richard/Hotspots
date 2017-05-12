@@ -3,6 +3,7 @@ package com.teamhotspots.hotspots;
 import android.*;
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -20,6 +21,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -30,7 +32,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -50,14 +54,15 @@ public class MainActivity extends AppCompatActivity
     public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private NavigationView navigationView;
     private MapHome mapFragment;
-    private FirebaseAuth mAuth;
 
     @Override
     public void onStart() {
         super.onStart();
+
         // Check if user is signed in (non-null) and update UI accordingly.
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         try {
-            FirebaseUser currentUser = mAuth.getCurrentUser();
+            String userId = currentUser.getUid();
         } catch (NullPointerException e) {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
@@ -80,11 +85,33 @@ public class MainActivity extends AppCompatActivity
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
             public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
                 SharedPreferences sharedPref =  getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
                 String username = sharedPref.getString(getString(R.string.username), "John Doe");
                 TextView usernameTV = (TextView) findViewById(R.id.username);
                 usernameTV.setText(username);
+                super.onDrawerOpened(drawerView);
+                LinearLayout signOutLayout = (LinearLayout) findViewById(R.id.sign_out_layout);
+                signOutLayout.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setIcon(android.R.drawable.ic_dialog_alert)
+                                .setTitle("Sign Out")
+                                .setMessage("Are you sure you want to sign out?")
+                                .setPositiveButton("Yes", new DialogInterface.OnClickListener()
+                                {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        FirebaseAuth.getInstance().signOut();
+                                        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                                        startActivity(intent);
+                                    }
+
+                                })
+                                .setNegativeButton("No", null)
+                                .show();
+                    }
+                });
             }
         };
         drawer.setDrawerListener(toggle);
