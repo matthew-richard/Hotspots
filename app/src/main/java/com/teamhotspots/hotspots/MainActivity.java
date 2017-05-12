@@ -32,6 +32,9 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -47,6 +50,19 @@ public class MainActivity extends AppCompatActivity
     public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private NavigationView navigationView;
     private MapHome mapFragment;
+    private FirebaseAuth mAuth;
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Check if user is signed in (non-null) and update UI accordingly.
+        try {
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+        } catch (NullPointerException e) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
