@@ -15,6 +15,9 @@
     <!-- Angle is relative to the nadir (line perpendicular to ground) -->
     <string name="defaultCameraTiltDegrees">45</string>
 
+    <!-- Number of adjacent posts it takes to create a hotspot -->
+    <string name="hotspotCreationThreshold">3</string>
+
     <!-- Map JSON style generated from https://mapstyle.withgoogle.com/  -->
     <string name="mapStyle">
 [

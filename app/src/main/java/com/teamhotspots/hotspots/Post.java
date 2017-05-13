@@ -1,5 +1,8 @@
 package com.teamhotspots.hotspots;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Exclude;
+
 import android.net.Uri;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -26,6 +29,9 @@ public class Post {
     private String userID;
     private int hotspotCreated;
     private List<String> likedBy;
+
+    @Exclude
+    public DatabaseReference ref;
 
     public Post() {}
     public Post(String username, String msg, String imageUrl, String userIcon,
@@ -145,5 +151,11 @@ public class Post {
         result.put("likedBy", likedBy);
 
         return result;
+    }
+
+    @Override
+    @Exclude
+    public boolean equals(Object obj) {
+        return obj.getClass() == Post.class && ((Post) obj).ref.equals(this.ref);
     }
 }
