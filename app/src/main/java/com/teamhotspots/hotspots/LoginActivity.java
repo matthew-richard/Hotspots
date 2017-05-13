@@ -348,6 +348,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                 if (task.isSuccessful()) {
                                     // Sign in success, update UI with the signed-in user's information
                                     Log.d(TAG, "signInWithEmail:success");
+                                    try { // allow time for authentication before transitioning to MainActivity
+                                        Thread.sleep(1000);
+                                    } catch (InterruptedException e) {}
                                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                     startActivity(intent);
                                 } else {
