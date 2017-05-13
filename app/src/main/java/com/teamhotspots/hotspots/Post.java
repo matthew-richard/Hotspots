@@ -20,10 +20,11 @@ public class Post {
     private double lat;
     private double lng;
     private String userID;
+    private int hotspotCreated;
 
     public Post() {}
     public Post(String username, String msg, String imageUrl, String userIcon,
-                String timeStamp, double lat, double lng) {
+                String timeStamp, double lat, double lng, int hotspotCreated) {
         this.username = username;
         this.msg = msg;
         this.imageUrl = imageUrl;
@@ -32,6 +33,7 @@ public class Post {
         this.lat = lat;
         this.lng = lng;
         this.numLikes = 0;
+        this.hotspotCreated = hotspotCreated;
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) this.userID = user.getUid();
@@ -41,6 +43,8 @@ public class Post {
     public String getUsername() {
         return username;
     }
+
+    public int getHotspotCreated() {return this.hotspotCreated;}
 
     public void setUsername(String username) {
         this.username = username;

@@ -94,9 +94,11 @@ public class Statistics extends Fragment {
                 Log.d("created", dataSnapshot.getKey());
                 int count = 0;
                 int numLikes = 0;
+                int hotspotCreated = 0;
                 for (DataSnapshot d : dataSnapshot.getChildren()) {
                     Post p = d.getValue(Post.class);
                     numLikes += p.getNumLikes();
+                    hotspotCreated += p.getHotspotCreated();
                     count++;
                 }
 
@@ -105,6 +107,10 @@ public class Statistics extends Fragment {
 
                 TextView posts = (TextView) rootView.findViewById(R.id.stat_total_posts_num);
                 posts.setText(Integer.toString(count));
+
+                TextView hotspotsCreated = (TextView) rootView.findViewById(R.id.stat_hotspots_num);
+                hotspotsCreated.setText(Integer.toString(hotspotCreated));
+
             }
 
             @Override

@@ -70,6 +70,7 @@ public class PhotoConfirm extends Fragment {
     private String usericon;
     private String msg;
     private String timeStamp;
+    private int hotspotCreated;
 
     public PhotoConfirm() {
         // Required empty public constructor
@@ -151,10 +152,8 @@ public class PhotoConfirm extends Fragment {
                 editor.commit();
 
                 //TODO update this if post becomes a hotspot centroid
-                //int htspts = sharedPref.getInt("NUM_HTSPT", 0);
-                //htspts += 1;
-                //editor.putInt("NUM_HTSPT", psts);
-                //editor.commit();
+                hotspotCreated = 0;
+                //if hotspot Created by this post, set hotspotCreated to 1 - this is for statistics
 
                 //username
                 username = sharedPref.getString(getString(R.string.username),
@@ -222,7 +221,7 @@ public class PhotoConfirm extends Fragment {
                         imageUrl = taskSnapshot.getDownloadUrl().toString();
 
                         activity.writeNewPost(
-                                new Post(username, msg, imageUrl, usericon, timeStamp, lat, lng));
+                                new Post(username, msg, imageUrl, usericon, timeStamp, lat, lng, hotspotCreated));
 
                     }
                 });

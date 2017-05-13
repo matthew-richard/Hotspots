@@ -197,11 +197,8 @@ public class NewPostActivity extends AppCompatActivity implements
             button_submit.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     //TODO update this if post becomes a hotspot centroid
-                    //int htspts = sharedPref.getInt("NUM_HTSPT", 0);
-                    //htspts += 1;
-                    //editor.putInt("NUM_HTSPT", psts);
-                    //editor.commit();
-
+                    int hotspotCreated = 0;
+                    //if hotspot Created by this post, set hotspotCreated to 1 - this is for statistics
 
                     String username = sharedPref.getString(getString(R.string.username),
                             getString(R.string.anonymous));
@@ -228,7 +225,7 @@ public class NewPostActivity extends AppCompatActivity implements
                         double lng = location.getLongitude();
                         ((NewPostActivity) getActivity())
                                 .writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp,
-                                        lat, lng));
+                                        lat, lng, hotspotCreated));
                     } catch (SecurityException e) {
                         Toast.makeText(getActivity(), "Should add location permission, post not uploaded.", Toast.LENGTH_LONG).show();
                     }
