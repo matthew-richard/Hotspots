@@ -5,7 +5,9 @@ import android.net.Uri;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,6 +25,7 @@ public class Post {
     private double lng;
     private String userID;
     private int hotspotCreated;
+    private List<String> likedBy;
 
     public Post() {}
     public Post(String username, String msg, String imageUrl, String userIcon,
@@ -40,6 +43,8 @@ public class Post {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) this.userID = user.getUid();
         else this.userID = "lnOu8CBcUKQKl3q9HoLr3nGsG532";  // TODO: remove this once login page is working. For now, use John's
+
+        likedBy = new ArrayList<String>();
     }
 
     public String getUsername() {
@@ -94,6 +99,37 @@ public class Post {
         this.userID = userID;
     }
 
+    public List<String> getLikedBy() {
+        return likedBy;
+    }
+
+    public void setLikedBy(List<String> likedBy) {
+        this.likedBy = likedBy;
+    }
+
+    public void addToLikedBy(String userID) {
+        if (likedBy == null) {
+            likedBy = new ArrayList<String>();
+        }
+        likedBy.add(userID);
+    }
+
+    public void removeFromLikedBy(String userID) {
+        if (likedBy == null) {
+            likedBy = new ArrayList<String>();
+            return;
+        }
+        likedBy.remove(userID);
+    }
+
+    public boolean inLikedBy(String userID) {
+        if (likedBy == null) {
+            likedBy = new ArrayList<String>();
+            return false;
+        }
+        return likedBy.contains(userID);
+    }
+
     public Map<String, Object> toMap() {
         HashMap<String, Object> result = new HashMap<>();
         result.put("username", username);
@@ -104,6 +140,9 @@ public class Post {
         result.put("timeStamp", timeStamp);
         result.put("lat", lat);
         result.put("lng", lng);
+        result.put("userID", userID);
+        result.put("hotspotCreated", hotspotCreated);
+        result.put("likedBy", likedBy);
 
         return result;
     }
