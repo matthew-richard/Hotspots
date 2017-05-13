@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -19,13 +20,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseIndexListAdapter;
 import com.firebase.ui.database.FirebaseListAdapter;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -42,6 +46,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -54,8 +59,8 @@ public class Feed extends Fragment {
     private DatabaseReference mReference;
 
     private ValueEventListener hotspotValueListener;
-    private ChildEventListener postsChildEventListener;
-    private FirebaseListAdapter<Post> adapter;
+    private AreaEventListener localAreaListener;
+    private ListAdapter adapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -75,113 +80,87 @@ public class Feed extends Fragment {
 
 
         String hotspotKey = getArguments().getString("hotspotKey");
-
-        // TODO: Populate local feed with local pins
         // For now, we just display the feed for example-hotspot
         if (hotspotKey.equals("local")) {
-            hotspotKey = "example-hotspot";
+            // Local feed
+
+            // Use a simple list adapter
+            adapter = new PostAdapter(getContext());
+
+            // Listen to local area and pass post events to list adapter
+            //TODO: Define local area
+            LatLngBounds localArea = null;// = new LatLngBounds();
+            localAreaListener = new AreaEventListener(localArea) {
+
+                @Override
+                public void onPostAdded(DataSnapshot post) {
+                    Post p = post.getValue(Post.class);
+                    p.ref = post.getRef();
+                    ((PostAdapter) adapter).add(p);
+                }
+
+                @Override
+                public void onPostChanged(DataSnapshot post) {
+                    Post p = post.getValue(Post.class);
+                    p.ref = post.getRef();
+                    PostAdapter pa = (PostAdapter) adapter;
+                    int pos = pa.getPosition(p);
+
+                    // Remove the post with the same DbReference as p
+                    pa.remove(p);
+
+                    // Insert updated p
+                    pa.insert(p, pos);
+                }
+
+                @Override
+                public void onPostRemoved(DataSnapshot post) {
+                    Post p = post.getValue(Post.class);
+                    p.ref = post.getRef();
+                    ((PostAdapter) adapter).remove(p);
+                }
+
+                /** leftovers **/
+                @Override
+                public boolean onDataChange(Collection<DataSnapshot> hotspots, Collection<DataSnapshot> posts) {
+                    // Nothing here
+                    return true;
+                }
+                @Override
+                public void onHotspotRemoved(DataSnapshot hotspot) {}
+                @Override
+                public void onHotspotAdded(DataSnapshot hotspot) {}
+                @Override
+                public void onHotspotChanged(DataSnapshot hotspot) {}
+            };
         }
+        else {
+            // Feed for existing hotspot
 
-        hotspotValueListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Hotspot h = dataSnapshot.getValue(Hotspot.class);
-                // Handle hotspot update, e.g. title change
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
-        };
-        mReference.child("hotspots").child(hotspotKey).addValueEventListener(hotspotValueListener);
-
-
-        adapter = new FirebaseIndexListAdapter<Post>(getActivity(), Post.class,
-                R.layout.post, mReference.child("hotspots/" + hotspotKey + "/posts"),
-                mReference.child("posts"))
-        {
-            @Override
-            protected void populateView(View v, Post p, int position) {
-                String key = getRef(position).getKey();
-
-                TextView username = (TextView) v.findViewById(R.id.username);
-                ImageView picture = (ImageView) v.findViewById(R.id.picture);
-                ImageView icon = (ImageView) v.findViewById(R.id.user_icon);
-                TextView message = (TextView) v.findViewById(R.id.message);
-                TextView likes = (TextView) v.findViewById(R.id.likes);
-                if (username != null) {
-                    username.setText(p.getUsername());
+            hotspotValueListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    Hotspot h = dataSnapshot.getValue(Hotspot.class);
+                    // TODO: Handle hotspot update, e.g. title change
                 }
 
-                if (p.getUsername().equals(getString(R.string.anonymous)) || p.getUsericon().equals("anonymousIcon")) {
-                    icon.setImageResource(R.drawable.ic_person_outline_black_24dp);
-                } else {
-                    //may need to format size
-                    Picasso.with(getContext()).load(p.getUsericon()).into(icon);
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
                 }
+            };
+            mReference.child("hotspots").child(hotspotKey).addValueEventListener(hotspotValueListener);
 
-                if (picture != null && p.isPicturePost()) {
-                    Picasso.with(getContext()).load(p.getImageUrl()).into(picture);
-                    picture.setVisibility(View.VISIBLE);
-                    ViewGroup.LayoutParams params = picture.getLayoutParams();
-                    params.height = dpToPx(getActivity().getApplicationContext(), 200);
-                } else if (picture!= null && !p.isPicturePost()) {
-                    picture.setVisibility(View.GONE);
-                    picture.setBackgroundResource(0);
-                    ViewGroup.LayoutParams params = picture.getLayoutParams();
-                    params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+
+            adapter = new FirebaseIndexListAdapter<Post>(getActivity(), Post.class,
+                    R.layout.post, mReference.child("hotspots/" + hotspotKey + "/posts"),
+                    mReference.child("posts")) {
+                @Override
+                protected void populateView(View v, Post p, int position) {
+                    p.ref = getRef(position);
+                    populatePostView(v, p, position);
                 }
-
-                if (message != null) {
-                    message.setText(p.getMsg());
-                }
-
-                if (likes != null) {
-                    likes.setText("" + p.getNumLikes());
-                }
-
-                ImageView thumbIcon = (ImageView) v.findViewById(R.id.like_icon);
-                ThumbIconOnClickListener listener = new ThumbIconOnClickListener(p, thumbIcon, likes, getRef(position));
-                String liked = getActivity().getSharedPreferences(getString(R.string.pref), Context.MODE_PRIVATE).getString(getString(R.string.liked_posts), "");
-                List<String> liked_keys = Arrays.asList(liked.split(","));
-
-                if (liked_keys.contains(key)) {
-                    listener.setClicked();
-                }
-
-                thumbIcon.setOnClickListener(listener);
-            }
-        };
-
-
-        postsChildEventListener = new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-                adapter.notifyDataSetChanged();
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                adapter.notifyDataSetChanged();
-            }
-        };
-        postsListView.setAdapter(adapter);
-        mReference.child("posts").addChildEventListener(postsChildEventListener);
+            };
+        }
 
         registerForContextMenu(postsListView);
         postsListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -204,8 +183,14 @@ public class Feed extends Fragment {
         // Remove Firebase ValueEventListeners, or else the fragment will continue listening
         // after being detached from the activity.
         //mReference.child("posts").removeEventListener(postsValueListener);
-        mReference.child("posts").removeEventListener(postsChildEventListener);
-        mReference.child("hotspots").removeEventListener(hotspotValueListener);
+        if (hotspotValueListener != null) {
+            // Hotspot feed
+            mReference.child("hotspots").removeEventListener(hotspotValueListener);
+        }
+        else {
+            // Local feed
+            localAreaListener.stopListening();
+        }
     }
 
     @Override
@@ -312,5 +297,69 @@ public class Feed extends Fragment {
         return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
+    private class PostAdapter extends ArrayAdapter<Post> {
 
+        public PostAdapter(Context context) {
+            super(context, 0);
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.post, parent, false);
+            }
+            populatePostView(convertView, this.getItem(position), position);
+            return convertView;
+        }
+    }
+
+    private void populatePostView(View v, Post p, int position) {
+        TextView username = (TextView) v.findViewById(R.id.username);
+        ImageView picture = (ImageView) v.findViewById(R.id.picture);
+        ImageView icon = (ImageView) v.findViewById(R.id.user_icon);
+        TextView message = (TextView) v.findViewById(R.id.message);
+        TextView likes = (TextView) v.findViewById(R.id.likes);
+        if (username != null) {
+            username.setText(p.getUsername());
+        }
+
+        if (p.getUsername().equals(getString(R.string.anonymous)) || p.getUsericon().equals("anonymousIcon")) {
+            icon.setImageResource(R.drawable.ic_person_outline_black_24dp);
+        } else {
+            //may need to format size
+            Picasso.with(getContext()).load(p.getUsericon()).into(icon);
+        }
+
+        if (picture != null && p.isPicturePost()) {
+            Picasso.with(getContext()).load(p.getImageUrl()).into(picture);
+            picture.setVisibility(View.VISIBLE);
+            ViewGroup.LayoutParams params = picture.getLayoutParams();
+            params.height = dpToPx(getActivity().getApplicationContext(), 200);
+        } else if (picture!= null && !p.isPicturePost()) {
+            picture.setVisibility(View.GONE);
+            picture.setBackgroundResource(0);
+            ViewGroup.LayoutParams params = picture.getLayoutParams();
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        }
+
+        if (message != null) {
+            message.setText(p.getMsg());
+        }
+
+        if (likes != null) {
+            likes.setText("" + p.getNumLikes());
+        }
+
+        ImageView thumbIcon = (ImageView) v.findViewById(R.id.like_icon);
+        ThumbIconOnClickListener listener = new ThumbIconOnClickListener(p, thumbIcon, likes, p.ref);
+        String liked = getActivity().getSharedPreferences(getString(R.string.pref), Context.MODE_PRIVATE).getString(getString(R.string.liked_posts), "");
+        List<String> liked_keys = Arrays.asList(liked.split(","));
+
+        if (liked_keys.contains(p.ref)) {
+            listener.setClicked();
+        }
+
+        thumbIcon.setOnClickListener(listener);
+    }
 }

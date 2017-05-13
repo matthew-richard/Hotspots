@@ -1,5 +1,7 @@
 package com.teamhotspots.hotspots;
 
+import android.provider.ContactsContract;
+
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.database.ChildEventListener;
@@ -28,11 +30,10 @@ public abstract class AreaEventListener {
 
     private List<DatabaseReference> hotspotSquareRefs;
     private List<DatabaseReference> postSquareRefs;
+    private Map<DatabaseReference, Boolean> squareRefsFetched;
 
     private Map<DatabaseReference, DataSnapshot> hotspots;
     private Map<DatabaseReference, DataSnapshot> posts;
-    private int numHotspotSquaresFetched;
-    private int numPostSquaresFetched;
 
     public AreaEventListener(LatLngBounds area) {
         if (db == null) {
@@ -43,31 +44,21 @@ public abstract class AreaEventListener {
         postSquareRefs = new ArrayList<>();
         hotspots = new HashMap<>();
         posts = new HashMap<>();
-        numHotspotSquaresFetched = 0;
-        numPostSquaresFetched = 0;
 
         valueEventListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getRef().getParent().getKey().equals("hotspots"))
+
+                if (!squareRefsFetched.get(dataSnapshot.getRef()))
                 {
-                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-                        hotspots.put(data.getRef(), data);
-                    }
-                    numHotspotSquaresFetched++;
-                }
-                else {
-                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-                        posts.put(data.getRef(), data);
-                    }
-                    numPostSquaresFetched++;
+                    squareRefsFetched.put(dataSnapshot.getRef(), true);
                 }
 
-                // Call onAreaLoaded() when data has been received about every square
-                if (numHotspotSquaresFetched == hotspotSquareRefs.size()
-                        && numPostSquaresFetched == postSquareRefs.size())
-                {
-                    onAreaLoaded(hotspots.values(), posts.values());
+                // Call onDataChange() when data has been received about every square
+                if (allSquaresFetched()) {
+                    if (!AreaEventListener.this.onDataChange(hotspots.values(), posts.values())) {
+                        stopListening();
+                    }
                 }
             }
 
@@ -120,24 +111,34 @@ public abstract class AreaEventListener {
 
         List<String> squares = getOverlappingSquares(area);
         for (String square : squares) {
-            hotspotSquareRefs.add(db.child("/hotspots/" + square));
-            postSquareRefs.add(db.child("/posts/" + square));
+            DatabaseReference hotspotSquareRef = db.child("/hotspots/" + square);
+            DatabaseReference postSquareRef = db.child("/posts/" + square);
+
+            hotspotSquareRefs.add(hotspotSquareRef);
+            postSquareRefs.add(postSquareRef);
+
+            squareRefsFetched.put(hotspotSquareRef, false);
+            squareRefsFetched.put(postSquareRef, false);
         }
     }
 
     /**
      * Called when all squares in the area have been loaded.
+     *
+     * @return False if this AreaEventListener should stop listening
+     * after the first call to onDataChange(), i.e. this is a single-value event listener.
+     * True if it should continue listening.
      */
-    public void onAreaLoaded(Collection<DataSnapshot> hotspots,
-                                      Collection<DataSnapshot> posts) {}
+    public abstract boolean onDataChange(Collection<DataSnapshot> hotspots,
+                                         Collection<DataSnapshot> posts);
 
     /** Child events **/
-    public void onHotspotAdded(DataSnapshot hotspot) {}
-    public void onPostAdded(DataSnapshot post) {}
-    public void onHotspotChanged(DataSnapshot hotspot) {}
-    public void onPostChanged(DataSnapshot post) {}
-    public void onHotspotRemoved(DataSnapshot hotspot) {}
-    public void onPostRemoved(DataSnapshot post) {}
+    public abstract void onHotspotAdded(DataSnapshot hotspot);
+    public abstract void onPostAdded(DataSnapshot post);
+    public abstract void onHotspotChanged(DataSnapshot hotspot);
+    public abstract void onPostChanged(DataSnapshot post);
+    public abstract void onHotspotRemoved(DataSnapshot hotspot);
+    public abstract void onPostRemoved(DataSnapshot post);
 
     public void startListening() {
         List<DatabaseReference> squareRefs = new ArrayList<>(hotspotSquareRefs);
@@ -145,7 +146,7 @@ public abstract class AreaEventListener {
 
         for (DatabaseReference squareRef : squareRefs) {
             squareRef.addChildEventListener(childEventListener);
-            squareRef.addListenerForSingleValueEvent(valueEventListener);
+            squareRef.addValueEventListener(valueEventListener);
         }
     }
 
@@ -157,6 +158,13 @@ public abstract class AreaEventListener {
             squareRef.removeEventListener(childEventListener);
             squareRef.removeEventListener(valueEventListener);
         }
+    }
+
+    private boolean allSquaresFetched() {
+        for (boolean b : squareRefsFetched.values()) {
+            if (!b) return false;
+        }
+        return true;
     }
 
     /**

@@ -1,5 +1,8 @@
 package com.teamhotspots.hotspots;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Exclude;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +19,9 @@ public class Post {
     private String timeStamp;
     private double lat;
     private double lng;
+
+    @Exclude
+    public DatabaseReference ref;
 
     public Post() {}
     public Post(String username, String msg, String imageUrl, String userIcon,
@@ -80,5 +86,11 @@ public class Post {
         result.put("lng", lng);
 
         return result;
+    }
+
+    @Override
+    @Exclude
+    public boolean equals(Object obj) {
+        return obj.getClass() == Post.class && ((Post) obj).ref.equals(this.ref);
     }
 }
