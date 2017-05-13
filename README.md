@@ -13,6 +13,7 @@ This app consists of three activities:
 An overview of all features in each activity/fragment:
 - LoginActivity:
   All new users are taken to this page in order to register/log in with an existing account
+  All passwords must be at least 6 characters long
 - Main Activity:
   After successful registration/authentication, users are taken to the main activity, which consists of a frame layout that can be replaced by a fragment. We've used fragments in order to successfully implement a navigation drawer for our app.
   - MapHome: A Google maps view of the user's current location and any hotspot pins that are around them
@@ -35,6 +36,10 @@ Each Post contains:
 - Hotspot Created (number of hotspots this post has been a part of)
 - Liked By (a list of user ID strings that have 'liked'/clicked the thumb icon on this post)
 
+
 Each Hotspot contains:
 - Latitude/Longitude (where the centroid of the hotspot is)
 - Posts (a list of Firebase keys for all the posts that are included in the hotspot) 
+
+Hotspot Implementation notes:
+The intention of the implementation of Hotspots is to generate them once there's enough traffic. Normally, in the implementation, we were thinking of a minimum of 10 posts per hotspot. For the sake of easier testing, we've lowered this number significantly.
