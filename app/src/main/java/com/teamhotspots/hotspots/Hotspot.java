@@ -29,4 +29,7 @@ public class Hotspot {
     public void addPost(String key) {
         posts.put(key, true);
     }
+
+    @Exclude
+    public Hotspot setKey(String key) { this.key = key; return this; }
 }
