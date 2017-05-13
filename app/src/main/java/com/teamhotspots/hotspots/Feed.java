@@ -27,6 +27,8 @@ import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseIndexListAdapter;
 import com.firebase.ui.database.FirebaseListAdapter;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -57,6 +59,7 @@ public class Feed extends Fragment {
     private ValueEventListener hotspotValueListener;
     private ChildEventListener postsChildEventListener;
     private FirebaseListAdapter<Post> adapter;
+    private String userID;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -67,7 +70,10 @@ public class Feed extends Fragment {
         Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
         toolbar.setTitle("Feed");
 
-        // generatePosts();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) this.userID = user.getUid();
+        else this.userID = "lnOu8CBcUKQKl3q9HoLr3nGsG532";  // TODO: remove this once login page is working. For now, use John's
+
         mReference = FirebaseDatabase.getInstance().getReference();
         postsListView = (ListView) view.findViewById(R.id.feed_list);
         //for now we won't worry about populating this
@@ -113,7 +119,7 @@ public class Feed extends Fragment {
                     username.setText(p.getUsername());
                 }
 
-                if (p.getUsername().equals(getString(R.string.anonymous)) || p.getUsericon().equals("anonymousIcon")) {
+                if (p.getUsername().equals(getString(R.string.anonymous))) {
                     icon.setImageResource(R.drawable.ic_person_outline_black_24dp);
                 } else {
                     //may need to format size
@@ -142,13 +148,6 @@ public class Feed extends Fragment {
 
                 ImageView thumbIcon = (ImageView) v.findViewById(R.id.like_icon);
                 ThumbIconOnClickListener listener = new ThumbIconOnClickListener(p, thumbIcon, likes, getRef(position));
-                String liked = getActivity().getSharedPreferences(getString(R.string.pref), Context.MODE_PRIVATE).getString(getString(R.string.liked_posts), "");
-                List<String> liked_keys = Arrays.asList(liked.split(","));
-
-                if (liked_keys.contains(key)) {
-                    listener.setClicked();
-                }
-
                 thumbIcon.setOnClickListener(listener);
             }
         };
@@ -259,6 +258,14 @@ public class Feed extends Fragment {
             this.thumbIcon = thumbIcon;
             this.likes = likes;
             this.ref = ref;
+
+            if (post.inLikedBy(userID)) {
+                this.pressed = true;
+                thumbIcon.setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_ATOP);
+            } else {
+                this.pressed = false;
+                thumbIcon.clearColorFilter();
+            }
         }
 
         public void setClicked() {
@@ -273,38 +280,18 @@ public class Feed extends Fragment {
                 pressed = true;
                 post.upvote();
                 thumbIcon.setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_ATOP);
-
-                SharedPreferences prefs = getActivity().getSharedPreferences(getString(R.string.pref), Context.MODE_PRIVATE);
-                String liked = prefs.getString(getString(R.string.liked_posts), "");
-                StringBuilder sb = new StringBuilder(liked);
-                sb.append(ref.getKey() + ",");
-
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString(getString(R.string.liked_posts), sb.toString());
-                editor.commit();
+                post.addToLikedBy(userID);
             } else {
                 pressed = false;
                 post.undoVote();
                 thumbIcon.clearColorFilter();
-
-                SharedPreferences prefs = getActivity().getSharedPreferences(getString(R.string.pref), Context.MODE_PRIVATE);
-                String liked = prefs.getString(getString(R.string.liked_posts), "");
-                ArrayList<String> likedList = new ArrayList<String>(Arrays.asList(liked.split(",")));
-                likedList.remove(key);
-
-                StringBuilder sb = new StringBuilder();
-                for(String s: likedList) {
-                    sb.append(s + ",");
-                }
-
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString(getString(R.string.liked_posts), sb.toString());
-                editor.commit();
+                post.removeFromLikedBy(userID);
             }
 
             likes.setText("" + post.getNumLikes());
 
             ref.child("numLikes").setValue(post.getNumLikes());
+            ref.child("likedBy").setValue(post.getLikedBy());
         }
     }
 
