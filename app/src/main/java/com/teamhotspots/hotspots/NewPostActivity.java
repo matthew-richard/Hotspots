@@ -40,11 +40,13 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -70,6 +72,8 @@ public class NewPostActivity extends AppCompatActivity implements
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
     private boolean permission = false;
     FirebaseUser user;
+    private DatabaseReference mReference;
+    private ChildEventListener hotspotsChildEventListener;
 
 
     /**
@@ -156,6 +160,31 @@ public class NewPostActivity extends AppCompatActivity implements
         newPost.setValue(post);
 
         // TODO: If post is in hotspot's range, update that hotspot's list of posts
+        Location loc1 = new Location("");
+        loc1.setLatitude(post.getLat());
+        loc1.setLongitude(post.getLng());
+
+        mReference = FirebaseDatabase.getInstance().getReference();
+        hotspotsChildEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {}
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {}
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        };
+        mReference.child("hotspots").addChildEventListener(hotspotsChildEventListener);
+
+
+        Location loc2 = new Location("");
+        //loc2.setLatitude(lat2);
+        //loc2.setLongitude(lon2);
+
+        float distanceInMeters = loc1.distanceTo(loc2);
 
         // e.g. hotspot.child("posts").push().setValue(postId)
         final String hotspotKey = "example-hotspot"; //TODO: Change this to an actual hotspot
@@ -209,6 +238,9 @@ public class NewPostActivity extends AppCompatActivity implements
                     //if hotspot Created by this post, set hotspotCreated to 1 - this is for statistics
 
                     String username = user.getDisplayName();
+                    if (username == null) {
+                        username = "Anonymous";
+                    }
 
                     //user icon path
                     String userIcon = "anonymousIcon";

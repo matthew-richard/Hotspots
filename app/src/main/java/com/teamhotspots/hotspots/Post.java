@@ -78,6 +78,10 @@ public class Post {
         return imageUrl;
     }
 
+    public double getLat() {return this.lat; }
+
+    public double getLng() {return this.lng; }
+
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }

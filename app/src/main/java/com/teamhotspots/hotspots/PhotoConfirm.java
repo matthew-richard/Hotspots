@@ -153,6 +153,9 @@ public class PhotoConfirm extends Fragment {
 
                 //username
                 username = user.getDisplayName();
+                if (username == null) {
+                    username = "Anonymous";
+                }
 
                 //user icon path
                 usericon = null;
@@ -239,19 +242,6 @@ public class PhotoConfirm extends Fragment {
         cursor.moveToFirst();
         return cursor.getString(column_index);
     }
-
-    //TODO: write a Hotspot to database if this post has 5 posts that are <25 meters away
-    /*public void writeNewHotspot(Hotspot hotspot) {
-
-        String key = mDatabase.child("posts").push().getKey();
-        Map<String, Object> postValues = post.toMap();
-
-        Map<String, Object> childUpdates = new HashMap<>();
-        childUpdates.put("/posts/" + key, postValues);
-
-        mDatabase.updateChildren(childUpdates);
-
-    }*/
 
     public Bitmap rotateImage(int orientation, Bitmap bitmap) {
         Matrix matrix = new Matrix();
