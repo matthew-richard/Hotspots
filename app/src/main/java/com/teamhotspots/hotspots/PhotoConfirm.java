@@ -164,6 +164,10 @@ public class PhotoConfirm extends Fragment {
                 } catch (Exception e){
                 }
 
+                if (usericon == null) {
+                    usericon = "anonymousIcon";
+                }
+
                 //anonymous or not
                 Switch sw = (Switch) rootView.findViewById(R.id.switch1);
                 if (sw.isChecked()) {

@@ -222,6 +222,11 @@ public class NewPostActivity extends AppCompatActivity implements
                     } catch (Exception e){
                     }
 
+                    if (userIcon == null) {
+                        userIcon = "anonymousIcon";
+                    }
+
+
                     Switch sw = (Switch) rootView.findViewById(R.id.switch1);
                     if (sw.isChecked()) {
                         username = getString(R.string.anonymous);
@@ -243,7 +248,7 @@ public class NewPostActivity extends AppCompatActivity implements
                         double lat = location.getLatitude();
                         double lng = location.getLongitude();
                         ((NewPostActivity) getActivity())
-                                .writeNewPost(new Post(username, msg, imageUrl, userIcon, timeStamp,
+                                .writeNewPost(new Post(username, msg, "none", userIcon, timeStamp,
                                         lat, lng, hotspotCreated));
                     } catch (SecurityException e) {
                         Toast.makeText(getActivity(), "Should add location permission, post not uploaded.", Toast.LENGTH_LONG).show();

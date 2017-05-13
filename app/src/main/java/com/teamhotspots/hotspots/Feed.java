@@ -14,6 +14,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -119,10 +120,11 @@ public class Feed extends Fragment {
                     username.setText(p.getUsername());
                 }
 
-                if (p.getUsername().equals(getString(R.string.anonymous))) {
+                if (p.getUsername().equals(getString(R.string.anonymous)) || p.getUsericon().equals("anonymousIcon")) {
                     icon.setImageResource(R.drawable.ic_person_outline_black_24dp);
                 } else {
                     //may need to format size
+                    Log.d("ICON", p.getUsericon());
                     Picasso.with(getContext()).load(p.getUsericon()).into(icon);
                 }
 

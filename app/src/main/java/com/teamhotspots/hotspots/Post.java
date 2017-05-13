@@ -18,7 +18,7 @@ public class Post {
     private String username;
     private String msg;
     private String imageUrl;
-    private String userIcon;
+    private String usericon;
     private int numLikes;
     private String timeStamp;
     private double lat;
@@ -33,7 +33,7 @@ public class Post {
         this.username = username;
         this.msg = msg;
         this.imageUrl = imageUrl;
-        this.userIcon = userIcon;
+        this.usericon = userIcon;
         this.timeStamp = timeStamp;
         this.lat = lat;
         this.lng = lng;
@@ -57,7 +57,7 @@ public class Post {
         this.username = username;
     }
 
-    public String getUsericon() {return userIcon;}
+    public String getUsericon() {return this.usericon;}
 
     public String getMsg() {
         return msg;
@@ -135,7 +135,7 @@ public class Post {
         result.put("username", username);
         result.put("msg", msg);
         result.put("imageUrl", imageUrl);
-        result.put("userIcon", userIcon);
+        result.put("usericon", usericon);
         result.put("numLikes", numLikes);
         result.put("timeStamp", timeStamp);
         result.put("lat", lat);
