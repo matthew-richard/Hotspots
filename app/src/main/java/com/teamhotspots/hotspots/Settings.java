@@ -4,7 +4,6 @@ import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -34,7 +33,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -62,8 +66,9 @@ public class Settings extends Fragment {
     static final int REQUEST_IMAGE_PICKER = 2;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
     private boolean permission = false;
-
+    private String imageUrl;
     Uri mPhotoUri;
+    FirebaseUser user;
     private StorageReference mStorage;
 
     public Settings() {
@@ -91,15 +96,15 @@ public class Settings extends Fragment {
 
         mRequestExternal();
 
+        user = FirebaseAuth.getInstance().getCurrentUser();
+
         final EditText et = (EditText) rootView.findViewById(R.id.set_user_enter);
-        SharedPreferences sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
-        final String username = sharedPref.getString(getString(R.string.username), "John Doe");
-        et.setText(username);
+        et.setText(user.getDisplayName());
         et.setSelection(et.getText().length());
 
-        String imgpath = sharedPref.getString("ICON_PATH", "anonymousIcon");
+        Uri imgpath = user.getPhotoUrl();
         ImageView photoView = (ImageView) rootView.findViewById(R.id.icon);
-        if (!imgpath.equals("anonymousIcon")) {
+        if (imgpath != null) {
             Picasso.with(getContext()).load(imgpath).into(photoView);
         }
 
@@ -117,10 +122,20 @@ public class Settings extends Fragment {
                     Toast.makeText(getActivity(), "Username cannot be empty",
                             Toast.LENGTH_LONG).show();
                 } else {
-                    SharedPreferences sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPref.edit();
-                    editor.putString(getString(R.string.username), et.getText().toString());
-                    editor.commit();
+                    user = FirebaseAuth.getInstance().getCurrentUser();
+                    if (user != null) {
+                        UserProfileChangeRequest profupdate = new UserProfileChangeRequest.Builder()
+                                .setDisplayName(et.getText().toString()).build();
+                        user.updateProfile(profupdate)
+                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        if (task.isSuccessful()) {
+                                            Log.d("USER", "User profile updated.");
+                                        }
+                                    }
+                                });
+                    }
 
                     try {
                         StorageReference filepath = mStorage.child("Icons").child(mPhotoUri.getLastPathSegment());
@@ -129,17 +144,32 @@ public class Settings extends Fragment {
                             @Override
                             @SuppressWarnings("VisibleForTests")
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                SharedPreferences sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
-                                SharedPreferences.Editor editor = sharedPref.edit();
-                                String imageUrl = taskSnapshot.getDownloadUrl().toString();
-                                editor.putString("ICON_PATH", imageUrl);
-                                editor.commit();
+                                imageUrl = taskSnapshot.getDownloadUrl().toString();
+                                if (user != null) {
+                                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                            .setPhotoUri(Uri.parse(imageUrl))
+                                            .build();
+
+                                    user.updateProfile(profileUpdates)
+                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if (task.isSuccessful()) {
+                                                        Log.d("USER", "User profile updated.");
+                                                    }
+                                                }
+                                            });
+                                }
+
                             }
                         });
-                    } catch (NullPointerException e) {}
 
+
+
+                    } catch (NullPointerException e) {}
                     Toast.makeText(getActivity(), "Saved",
                             Toast.LENGTH_LONG).show();
+
                 }
             }
         });

@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -54,6 +53,8 @@ public class MainActivity extends AppCompatActivity
     public static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private NavigationView navigationView;
     private MapHome mapFragment;
+    FirebaseUser user;
+
 
     @Override
     public void onStart() {
@@ -72,6 +73,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        user = FirebaseAuth.getInstance().getCurrentUser();
+
         if (android.os.Build.VERSION.SDK_INT > 9) {
             StrictMode.ThreadPolicy policy =
                     new StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -85,10 +88,14 @@ public class MainActivity extends AppCompatActivity
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
             public void onDrawerOpened(View drawerView) {
-                SharedPreferences sharedPref =  getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
-                String username = sharedPref.getString(getString(R.string.username), "John Doe");
                 TextView usernameTV = (TextView) findViewById(R.id.username);
-                usernameTV.setText(username);
+                if (user != null) {
+                    if (user.getDisplayName() != null) {
+                        usernameTV.setText(user.getDisplayName());
+                    } else {
+                        usernameTV.setText("Anonymous");
+                    }
+                }
                 super.onDrawerOpened(drawerView);
                 LinearLayout signOutLayout = (LinearLayout) findViewById(R.id.sign_out_layout);
                 signOutLayout.setOnClickListener(new View.OnClickListener() {

@@ -1,7 +1,6 @@
 package com.teamhotspots.hotspots;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -47,7 +46,6 @@ import static com.teamhotspots.hotspots.R.layout.post;
  */
 public class Statistics extends Fragment {
     private OnFragmentInteractionListener mListener;
-    private SharedPreferences sharedPref;
     private String userID;
 
     public Statistics() {
@@ -84,7 +82,6 @@ public class Statistics extends Fragment {
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
         navigationView.getMenu().getItem(2).setChecked(true);
 
-        sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         Query postsRef = database.getReference().child("posts").orderByChild("userID").equalTo(userID);
 
@@ -118,11 +115,6 @@ public class Statistics extends Fragment {
                 System.out.println("The read failed: " + databaseError.getCode());
             }
                 });
-
-        int htspts = sharedPref.getInt("NUM_HTSPT", 0);
-
-        TextView hotspots = (TextView) rootView.findViewById(R.id.stat_hotspots_num);
-        hotspots.setText(Integer.toString(htspts));
 
         return rootView;
     }

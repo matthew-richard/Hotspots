@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -44,6 +43,8 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -67,8 +68,9 @@ public class NewPostActivity extends AppCompatActivity implements
 {
     private static DatabaseReference mDatabase;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
-    private static SharedPreferences sharedPref;
     private boolean permission = false;
+    FirebaseUser user;
+
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -89,7 +91,8 @@ public class NewPostActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_new_post);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        sharedPref = getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
+        user = FirebaseAuth.getInstance().getCurrentUser();
+
 
         Window window = getWindow();
         window.setStatusBarColor(ContextCompat.getColor(this , R.color.black));
@@ -168,6 +171,8 @@ public class NewPostActivity extends AppCompatActivity implements
      */
     public static class TextFragment extends Fragment {
 
+        FirebaseUser user;
+
         public TextFragment() {
         }
 
@@ -186,6 +191,9 @@ public class NewPostActivity extends AppCompatActivity implements
             final EditText et = (EditText) rootView.findViewById(R.id.postText);
             et.setSelection(et.getText().length());
 
+            user = FirebaseAuth.getInstance().getCurrentUser();
+
+
             final Button button_cancel = (Button) rootView.findViewById(R.id.cancel);
             button_cancel.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
@@ -200,19 +208,25 @@ public class NewPostActivity extends AppCompatActivity implements
                     int hotspotCreated = 0;
                     //if hotspot Created by this post, set hotspotCreated to 1 - this is for statistics
 
-                    String username = sharedPref.getString(getString(R.string.username),
-                            getString(R.string.anonymous));
+                    String username = user.getDisplayName();
+
+                    //user icon path
+                    String userIcon = "anonymousIcon";
+                    try {
+                        userIcon = user.getPhotoUrl().toString();
+                    } catch (Exception e){
+                    }
 
                     Switch sw = (Switch) rootView.findViewById(R.id.switch1);
                     if (sw.isChecked()) {
                         username = getString(R.string.anonymous);
+                        userIcon = "anonymousIcon";
                     }
 
                     String msg = et.getText().toString();
                     String imageUrl = null;
-                    //user icon path
-                    String userIcon = sharedPref.getString("ICON_PATH",
-                            "anonymousIcon");
+
+
                     String timeStamp = new Date().toString();
 
                     LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
@@ -247,6 +261,8 @@ public class NewPostActivity extends AppCompatActivity implements
         static final int REQUEST_IMAGE_CAPTURE = 1;
         static final int REQUEST_IMAGE_PICKER = 2;
         private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
+        FirebaseUser user;
+
 
         private View mView;
         Uri mPhotoUri;
@@ -267,6 +283,8 @@ public class NewPostActivity extends AppCompatActivity implements
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_photo, container, false);
             mView = rootView;
+            user = FirebaseAuth.getInstance().getCurrentUser();
+
 
             if (ContextCompat.checkSelfPermission(getContext(), WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(getContext(), "Need Storage Permissions!", Toast.LENGTH_SHORT).show();
@@ -352,6 +370,7 @@ public class NewPostActivity extends AppCompatActivity implements
     public static class NewPostTab extends Fragment {
         private PagerAdapter pagerAdapter;
         private ViewPager mViewPager;
+
 
 
         public NewPostTab() {

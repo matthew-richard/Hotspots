@@ -3,7 +3,6 @@ package com.teamhotspots.hotspots;
 import android.*;
 import android.Manifest;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -35,6 +34,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -58,7 +58,6 @@ public class PhotoConfirm extends Fragment {
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private static DatabaseReference mDatabase;
     private static StorageReference mStorage;
-    private static SharedPreferences sharedPref;
     private boolean mLocationPermissionGranted = true;
     private View rootView;
     private Bitmap photo;
@@ -71,6 +70,8 @@ public class PhotoConfirm extends Fragment {
     private String msg;
     private String timeStamp;
     private int hotspotCreated;
+    FirebaseUser user;
+
 
     public PhotoConfirm() {
         // Required empty public constructor
@@ -87,9 +88,10 @@ public class PhotoConfirm extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        user = FirebaseAuth.getInstance().getCurrentUser();
+
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mStorage = FirebaseStorage.getInstance().getReference();
-        sharedPref = getActivity().getSharedPreferences("PREF", MODE_PRIVATE);
 
 
         if (getArguments() != null) {
@@ -145,23 +147,19 @@ public class PhotoConfirm extends Fragment {
         final Button button_submit = (Button) rootView.findViewById(R.id.submit);
         button_submit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                SharedPreferences.Editor editor = sharedPref.edit();
-                int psts = sharedPref.getInt("NUM_POSTS", 0);
-                psts += 1;
-                editor.putInt("NUM_POSTS", psts);
-                editor.commit();
-
                 //TODO update this if post becomes a hotspot centroid
                 hotspotCreated = 0;
                 //if hotspot Created by this post, set hotspotCreated to 1 - this is for statistics
 
                 //username
-                username = sharedPref.getString(getString(R.string.username),
-                        getString(R.string.anonymous));
+                username = user.getDisplayName();
 
                 //user icon path
-                usericon = sharedPref.getString("ICON_PATH",
-                        "anonymousIcon");
+                usericon = null;
+                try {
+                    usericon = user.getPhotoUrl().toString();
+                } catch (Exception e){
+                }
 
                 //anonymous or not
                 Switch sw = (Switch) rootView.findViewById(R.id.switch1);
