@@ -1,5 +1,8 @@
 package com.teamhotspots.hotspots;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Exclude;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -12,6 +15,9 @@ public class Hotspot {
     public double lng;
     public HashMap<String, Boolean> posts;
 
+    @Exclude
+    public String key;
+
     public Hotspot() {}
     public Hotspot(double lat, double lng, HashMap<String, Boolean> posts) {
         this.lat = lat;
@@ -19,6 +25,7 @@ public class Hotspot {
         this.posts = posts;
     }
 
+    @Exclude
     public void addPost(String key) {
         posts.put(key, true);
     }

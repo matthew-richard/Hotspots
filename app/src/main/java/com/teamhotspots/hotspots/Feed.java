@@ -7,11 +7,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.location.Location;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.view.ContextMenu;
@@ -29,14 +29,12 @@ import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseIndexListAdapter;
 import com.firebase.ui.database.FirebaseListAdapter;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.MutableData;
-import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
@@ -56,10 +54,10 @@ import java.util.List;
 public class Feed extends Fragment {
     private ListView postsListView;
     private Post itemSelected;
+
     private DatabaseReference mReference;
 
-    private ValueEventListener hotspotValueListener;
-    private AreaEventListener localAreaListener;
+    private AreaEventListener areaListener;
     private ListAdapter adapter;
 
     @Override
@@ -80,87 +78,67 @@ public class Feed extends Fragment {
 
 
         String hotspotKey = getArguments().getString("hotspotKey");
-        // For now, we just display the feed for example-hotspot
+        double hotspotLat = getArguments().getDouble("hotspotLat");
+        double hotspotLng = getArguments().getDouble("hotspotLng");
+
+        int listenRadius;
         if (hotspotKey.equals("local")) {
             // Local feed
-
-            // Use a simple list adapter
-            adapter = new PostAdapter(getContext());
-
-            // Listen to local area and pass post events to list adapter
-            //TODO: Define local area
-            LatLngBounds localArea = null;// = new LatLngBounds();
-            localAreaListener = new AreaEventListener(localArea) {
-
-                @Override
-                public void onPostAdded(DataSnapshot post) {
-                    Post p = post.getValue(Post.class);
-                    p.ref = post.getRef();
-                    ((PostAdapter) adapter).add(p);
-                }
-
-                @Override
-                public void onPostChanged(DataSnapshot post) {
-                    Post p = post.getValue(Post.class);
-                    p.ref = post.getRef();
-                    PostAdapter pa = (PostAdapter) adapter;
-                    int pos = pa.getPosition(p);
-
-                    // Remove the post with the same DbReference as p
-                    pa.remove(p);
-
-                    // Insert updated p
-                    pa.insert(p, pos);
-                }
-
-                @Override
-                public void onPostRemoved(DataSnapshot post) {
-                    Post p = post.getValue(Post.class);
-                    p.ref = post.getRef();
-                    ((PostAdapter) adapter).remove(p);
-                }
-
-                /** leftovers **/
-                @Override
-                public boolean onDataChange(Collection<DataSnapshot> hotspots, Collection<DataSnapshot> posts) {
-                    // Nothing here
-                    return true;
-                }
-                @Override
-                public void onHotspotRemoved(DataSnapshot hotspot) {}
-                @Override
-                public void onHotspotAdded(DataSnapshot hotspot) {}
-                @Override
-                public void onHotspotChanged(DataSnapshot hotspot) {}
-            };
+            listenRadius = Integer.parseInt(getString(R.string.locationCircleRadius));
         }
         else {
             // Feed for existing hotspot
-
-            hotspotValueListener = new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    Hotspot h = dataSnapshot.getValue(Hotspot.class);
-                    // TODO: Handle hotspot update, e.g. title change
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                }
-            };
-            mReference.child("hotspots").child(hotspotKey).addValueEventListener(hotspotValueListener);
-
-
-            adapter = new FirebaseIndexListAdapter<Post>(getActivity(), Post.class,
-                    R.layout.post, mReference.child("hotspots/" + hotspotKey + "/posts"),
-                    mReference.child("posts")) {
-                @Override
-                protected void populateView(View v, Post p, int position) {
-                    p.ref = getRef(position);
-                    populatePostView(v, p, position);
-                }
-            };
+            listenRadius = Integer.parseInt(getString(R.string.hotspotCircleRadius));
         }
+
+        // Use a simple list adapter
+        adapter = new PostAdapter(getContext());
+
+        // Listen to local area and pass post events to list adapter
+        areaListener = new AreaEventListener(new LatLng(hotspotLat, hotspotLng), listenRadius) {
+
+            @Override
+            public void onPostAdded(DataSnapshot post) {
+                Post p = post.getValue(Post.class);
+                p.ref = post.getRef();
+                ((PostAdapter) adapter).add(p);
+            }
+
+            @Override
+            public void onPostChanged(DataSnapshot post) {
+                Post p = post.getValue(Post.class);
+                p.ref = post.getRef();
+                PostAdapter pa = (PostAdapter) adapter;
+                int pos = pa.getPosition(p);
+
+                // Remove the post with the same DbReference as p
+                pa.remove(p);
+
+                // Insert updated p
+                pa.insert(p, pos);
+            }
+
+            @Override
+            public void onPostRemoved(DataSnapshot post) {
+                Post p = post.getValue(Post.class);
+                p.ref = post.getRef();
+                ((PostAdapter) adapter).remove(p);
+            }
+
+            /** leftovers **/
+            @Override
+            public boolean onDataChange(Collection<DataSnapshot> hotspots, Collection<DataSnapshot> posts) {
+                // Nothing here
+                return true;
+            }
+            @Override
+            public void onHotspotRemoved(DataSnapshot hotspot) {}
+            @Override
+            public void onHotspotAdded(DataSnapshot hotspot) {}
+            @Override
+            public void onHotspotChanged(DataSnapshot hotspot) {}
+        };
+        areaListener.startListening();
 
         registerForContextMenu(postsListView);
         postsListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -183,14 +161,7 @@ public class Feed extends Fragment {
         // Remove Firebase ValueEventListeners, or else the fragment will continue listening
         // after being detached from the activity.
         //mReference.child("posts").removeEventListener(postsValueListener);
-        if (hotspotValueListener != null) {
-            // Hotspot feed
-            mReference.child("hotspots").removeEventListener(hotspotValueListener);
-        }
-        else {
-            // Local feed
-            localAreaListener.stopListening();
-        }
+        areaListener.stopListening();
     }
 
     @Override

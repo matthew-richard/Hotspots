@@ -41,6 +41,7 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -50,6 +51,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -106,18 +108,64 @@ public class NewPostActivity extends AppCompatActivity implements
 
     public void writeNewPost(Post post) {
         // Push the post details
-        final DatabaseReference newPost = mDatabase.child("posts").push();
+        final DatabaseReference newPost = mDatabase.child("posts/"
+                + AreaEventListener.getSquare(post.getLat(), post.getLon())).push();
         newPost.setValue(post);
 
-        // TODO: If post is in hotspot's range, update that hotspot's list of posts
+        final int hotspotCircleRadius = Integer.parseInt(getString(R.string.hotspotCircleRadius));
+        final LatLng postLatLng = new LatLng(post.getLat(), post.getLon());
 
-        // e.g. hotspot.child("posts").push().setValue(postId)
-        final String hotspotKey = "example-hotspot"; //TODO: Change this to an actual hotspot
+        // Generate new hotspot if necessary
+        new AreaEventListener(postLatLng, hotspotCircleRadius) {
+            @Override
+            public boolean onDataChange(Collection<DataSnapshot> hotspots,
+                                        Collection<DataSnapshot> posts)
+            {
+                boolean hotspotTooClose = false;
+                int hotspotCreationThreshold = Integer.parseInt(getString(
+                        R.string.hotspotCreationThreshold));
+                float[] dist = new float[1];
 
-        // To store a hotspot's list of posts, we store the post IDs as keys and 'true'
-        // as the value. This is the recommended way to lists of keys in Firebase, see:
-        // https://firebase.google.com/docs/database/android/structure-data
-        mDatabase.child("hotspots/" + hotspotKey + "/posts").child(newPost.getKey()).setValue(true);
+                // Check if any hotspot is already within range of this new post
+                for (DataSnapshot h : hotspots) {
+                    Hotspot hotspot = h.getValue(Hotspot.class);
+                    Location.distanceBetween(postLatLng.latitude, postLatLng.longitude, hotspot.lat,
+                            hotspot.lng, dist);
+                    if (dist[0] <= hotspotCircleRadius) {
+                        hotspotTooClose = true;
+                        break;
+                    }
+                }
+
+                // If there are enough hotspots
+                if (!hotspotTooClose && hotspots.size() >= hotspotCreationThreshold) {
+                    // Create hotspot at new post's location
+                    DatabaseReference square = mDatabase.child("hotspots/" +
+                            AreaEventListener.getSquare(postLatLng.latitude, postLatLng.longitude)
+                            + "/");
+
+                    DatabaseReference newHotspot = square.push();
+                    newHotspot.setValue(new Hotspot(postLatLng.latitude, postLatLng.longitude,
+                            new HashMap<String, Boolean>()));
+                }
+
+                // Stop listening
+                return false;
+            }
+
+            @Override
+            public void onHotspotAdded(DataSnapshot hotspot) {}
+            @Override
+            public void onPostAdded(DataSnapshot post) {}
+            @Override
+            public void onHotspotChanged(DataSnapshot hotspot) {}
+            @Override
+            public void onPostChanged(DataSnapshot post) {}
+            @Override
+            public void onHotspotRemoved(DataSnapshot hotspot) {}
+            @Override
+            public void onPostRemoved(DataSnapshot post) {}
+        };
 
         // Update user activity (stored in shared prefs)
         String created = sharedPref.getString("CREATED", "");

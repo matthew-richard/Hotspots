@@ -36,6 +36,9 @@ public class Post {
         this.numLikes = 0;
     }
 
+    public double getLat() { return lat; }
+    public double getLon() { return lng; }
+
     public String getUsername() {
         return username;
     }

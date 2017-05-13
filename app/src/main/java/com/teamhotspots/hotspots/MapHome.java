@@ -80,7 +80,7 @@ public class MapHome extends Fragment
     public static final int LOCATION_REQUEST_FASTEST_INTERVAL_SEC = 3;
 
     private GoogleMap mMap;
-    private Location lastLocation;
+    public Location lastLocation;
     private Marker locationMarker;
     private Circle locationCircle;
     private ArrayList<Marker> hotspotMarkers;
@@ -314,17 +314,23 @@ public class MapHome extends Fragment
 
     @Override
     public boolean onMarkerClick(final Marker marker) {
-        Fragment fragment = new Feed();
+        // Display feed
+
+        Feed feed = new Feed();
+        Hotspot hotspot = (Hotspot) marker.getTag();
         Bundle args = new Bundle();
-        args.putString("hotspotKey", (String) marker.getTag());
-        fragment.setArguments(args);
+        args.putString("hotspotKey", hotspot.key);
+        args.putDouble("hotspotLat", hotspot.lat);
+        args.putDouble("hotspotLon", hotspot.lng);
+        feed.setArguments(args);
 
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.content_frame, fragment)
+                .replace(R.id.content_frame, feed)
                 .addToBackStack(null)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .commit();
+
         return false;
     }
 

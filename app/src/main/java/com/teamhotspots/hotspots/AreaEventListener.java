@@ -1,7 +1,9 @@
 package com.teamhotspots.hotspots;
 
+import android.location.Location;
 import android.provider.ContactsContract;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.database.ChildEventListener;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -35,7 +38,21 @@ public abstract class AreaEventListener {
     private Map<DatabaseReference, DataSnapshot> hotspots;
     private Map<DatabaseReference, DataSnapshot> posts;
 
+    private LatLng circleCenter;
+    private int circleRadius;
+
     public AreaEventListener(LatLngBounds area) {
+        circleCenter = null;
+        initialize(area);
+    }
+
+    public AreaEventListener(LatLng circleCenter, int circleRadius) {
+        this.circleCenter = circleCenter;
+        this.circleRadius = circleRadius;
+        initialize(getCircleBounds());
+    }
+
+    private void initialize(LatLngBounds area) {
         if (db == null) {
             db = FirebaseDatabase.getInstance().getReference();
         }
@@ -49,14 +66,14 @@ public abstract class AreaEventListener {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
-                if (!squareRefsFetched.get(dataSnapshot.getRef()))
-                {
-                    squareRefsFetched.put(dataSnapshot.getRef(), true);
-                }
+                squareRefsFetched.put(dataSnapshot.getRef(), true);
 
-                // Call onDataChange() when data has been received about every square
+                // Call onDataChange() only after data has been received about every square
                 if (allSquaresFetched()) {
-                    if (!AreaEventListener.this.onDataChange(hotspots.values(), posts.values())) {
+                    boolean dataChangeResult = AreaEventListener.this.onDataChange(
+                            hotspots.values(), posts.values());
+
+                    if (!dataChangeResult) {
                         stopListening();
                     }
                 }
@@ -70,36 +87,51 @@ public abstract class AreaEventListener {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 try {
-                    dataSnapshot.getValue(Hotspot.class);
-                    hotspots.put(dataSnapshot.getRef(), dataSnapshot);
-                    onHotspotAdded(dataSnapshot);
+                    Hotspot hotspot = dataSnapshot.getValue(Hotspot.class);
+                    if (!isCircle() || inCircle(hotspot)) {
+                        hotspots.put(dataSnapshot.getRef(), dataSnapshot);
+                        onHotspotAdded(dataSnapshot);
+                    }
                 } catch (Exception e) {
-                    posts.put(dataSnapshot.getRef(), dataSnapshot);
-                    onPostAdded(dataSnapshot);
+                    Post post = dataSnapshot.getValue(Post.class);
+                    if (!isCircle() || inCircle(post)) {
+                        posts.put(dataSnapshot.getRef(), dataSnapshot);
+                        onPostAdded(dataSnapshot);
+                    }
                 }
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
                 try {
-                    dataSnapshot.getValue(Hotspot.class);
-                    hotspots.put(dataSnapshot.getRef(), dataSnapshot);
-                    onHotspotChanged(dataSnapshot);
+                    Hotspot hotspot = dataSnapshot.getValue(Hotspot.class);
+                    if (!isCircle() || inCircle(hotspot)) {
+                        hotspots.put(dataSnapshot.getRef(), dataSnapshot);
+                        onHotspotChanged(dataSnapshot);
+                    }
                 } catch (Exception e) {
-                    posts.put(dataSnapshot.getRef(), dataSnapshot);
-                    onPostChanged(dataSnapshot);
+                    Post post = dataSnapshot.getValue(Post.class);
+                    if (!isCircle() || inCircle(post)) {
+                        posts.put(dataSnapshot.getRef(), dataSnapshot);
+                        onPostChanged(dataSnapshot);
+                    }
                 }
             }
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
                 try {
-                    dataSnapshot.getValue(Hotspot.class);
-                    hotspots.remove(dataSnapshot.getRef());
-                    onHotspotRemoved(dataSnapshot);
+                    Hotspot hotspot = dataSnapshot.getValue(Hotspot.class);
+                    if (!isCircle() || inCircle(hotspot)) {
+                        hotspots.remove(dataSnapshot.getRef());
+                        onHotspotRemoved(dataSnapshot);
+                    }
                 } catch (Exception e) {
-                    posts.remove(dataSnapshot.getRef());
-                    onPostRemoved(dataSnapshot);
+                    Post post = dataSnapshot.getValue(Post.class);
+                    if (!isCircle() || inCircle(post)) {
+                        posts.remove(dataSnapshot.getRef());
+                        onPostRemoved(dataSnapshot);
+                    }
                 }
             }
 
@@ -120,6 +152,28 @@ public abstract class AreaEventListener {
             squareRefsFetched.put(hotspotSquareRef, false);
             squareRefsFetched.put(postSquareRef, false);
         }
+    }
+
+    private boolean inCircle(Hotspot hotspot) {
+        if (!isCircle()) return false;
+
+        float[] dist = new float[1];
+        Location.distanceBetween(hotspot.lat, hotspot.lng, circleCenter.latitude,
+                circleCenter.longitude, dist);
+        return dist[0] <= circleRadius;
+    }
+
+    private boolean inCircle(Post post) {
+        if (!isCircle()) return false;
+
+        float[] dist = new float[1];
+        Location.distanceBetween(post.getLat(), post.getLon(), circleCenter.latitude,
+                circleCenter.longitude, dist);
+        return dist[0] <= circleRadius;
+    }
+
+    public boolean isCircle() {
+        return circleCenter != null;
     }
 
     /**
@@ -184,10 +238,41 @@ public abstract class AreaEventListener {
              lon <= truncateToHundredths(bounds.northeast.longitude);
              lon += 0.01)
         {
-            squares.add(lat + "," + lon);
+            squares.add(getSquare(lat, lon));
         }
 
         return squares;
+    }
+
+    public static String getSquare(double lat, double lon) {
+        return String.format(Locale.US, "%.2f,%.2f", lat, lon);
+    }
+
+    /** Returns overlapping squares of a circle rather than a rectangle **/
+    private List<String> getOverlappingSquares() {
+        return getOverlappingSquares(getCircleBounds());
+    }
+
+    private LatLngBounds getCircleBounds() {
+        LatLng cc = circleCenter;
+
+        float[] metersPerLat = new float[1];
+        Location.distanceBetween(cc.latitude, cc.longitude, cc.latitude + 0.01, cc.longitude,
+                metersPerLat);
+        metersPerLat[0] *= 100;
+
+        float[] metersPerLon = new float[1];
+        Location.distanceBetween(cc.latitude, cc.longitude,
+                cc.latitude, cc.longitude + 0.01, metersPerLon);
+        metersPerLon[0] *= 100;
+
+        float radiusLat = circleRadius / metersPerLat[0];
+        float radiusLon = circleRadius / metersPerLon[0];
+
+        return new LatLngBounds.Builder()
+                .include(new LatLng(cc.latitude + radiusLat, cc.longitude + radiusLon))
+                .include(new LatLng(cc.latitude - radiusLat, cc.longitude - radiusLon))
+                .build();
     }
 
     private static double truncateToHundredths(double d) {
