@@ -16,11 +16,14 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -45,8 +48,7 @@ import static com.teamhotspots.hotspots.R.layout.post;
 public class Statistics extends Fragment {
     private OnFragmentInteractionListener mListener;
     private SharedPreferences sharedPref;
-    private String pts;
-    private String[] parts;
+    private String userID;
 
     public Statistics() {
         // Required empty public constructor
@@ -73,53 +75,45 @@ public class Statistics extends Fragment {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_statistics, container, false);
 
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) this.userID = user.getUid();
+        else userID = "lnOu8CBcUKQKl3q9HoLr3nGsG532";  // TODO: remove this once login page is working. For now, use John's
+
         Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
         toolbar.setTitle("Statistics");
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
         navigationView.getMenu().getItem(2).setChecked(true);
 
         sharedPref = getActivity().getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
-        String pts = sharedPref.getString("CREATED", "");
-        System.out.println(pts);
-        Log.d("created", pts);
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        Query postsRef = database.getReference().child("posts").orderByChild("userID").equalTo(userID);
 
-        if (!isEmpty(pts)) {
-            parts = pts.split(",");
+        postsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d("created", dataSnapshot.getKey());
+                int count = 0;
+                int numLikes = 0;
+                for (DataSnapshot d : dataSnapshot.getChildren()) {
+                    Post p = d.getValue(Post.class);
+                    numLikes += p.getNumLikes();
+                    count++;
+                }
 
-            final FirebaseDatabase database = FirebaseDatabase.getInstance();
-            //for (int i = 0; i < parts.length; i++) {
-                DatabaseReference postsRef = database.getReference().child("posts");
-                //Log.d("created", postsRef.getKey());
+                TextView points = (TextView) rootView.findViewById(R.id.stat_total_pts_num);
+                points.setText(Integer.toString(numLikes));
 
-                postsRef.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        Log.d("created", dataSnapshot.getKey());
-                        int numLikes = 0;
-                        for (int i = 0; i < parts.length; i++) {
-                            Post p = dataSnapshot.child(parts[i]).getValue(Post.class);
-                            System.out.println(p.getMsg());
-                            System.out.println(p.getNumLikes());
-                            numLikes += p.getNumLikes();
-                        }
+                TextView posts = (TextView) rootView.findViewById(R.id.stat_total_posts_num);
+                posts.setText(Integer.toString(count));
+            }
 
-                        TextView points = (TextView) rootView.findViewById(R.id.stat_total_pts_num);
-                        points.setText(Integer.toString(numLikes));
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        System.out.println("The read failed: " + databaseError.getCode());
-                    }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getCode());
+            }
                 });
 
-        }
-
-        int psts = sharedPref.getInt("NUM_POSTS", 0);
         int htspts = sharedPref.getInt("NUM_HTSPT", 0);
-
-        TextView posts = (TextView) rootView.findViewById(R.id.stat_total_posts_num);
-        posts.setText(Integer.toString(psts));
 
         TextView hotspots = (TextView) rootView.findViewById(R.id.stat_hotspots_num);
         hotspots.setText(Integer.toString(htspts));

@@ -91,7 +91,6 @@ public class NewPostActivity extends AppCompatActivity implements
         mDatabase = FirebaseDatabase.getInstance().getReference();
         sharedPref = getSharedPreferences(getString(R.string.pref), MODE_PRIVATE);
 
-
         Window window = getWindow();
         window.setStatusBarColor(ContextCompat.getColor(this , R.color.black));
 
@@ -162,14 +161,6 @@ public class NewPostActivity extends AppCompatActivity implements
         // as the value. This is the recommended way to lists of keys in Firebase, see:
         // https://firebase.google.com/docs/database/android/structure-data
         mDatabase.child("hotspots/" + hotspotKey + "/posts").child(newPost.getKey()).setValue(true);
-
-        // Update user activity (stored in shared prefs)
-        String created = sharedPref.getString("CREATED", "");
-        SharedPreferences.Editor editor = sharedPref.edit();
-        StringBuilder sb = new StringBuilder(created);
-        sb.append(newPost.getKey() + ",");
-        editor.putString("CREATED", sb.toString());
-        editor.commit();
     }
 
     /**
@@ -205,12 +196,6 @@ public class NewPostActivity extends AppCompatActivity implements
             final Button button_submit = (Button) rootView.findViewById(R.id.submit);
             button_submit.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    SharedPreferences.Editor editor = sharedPref.edit();
-                    int psts = sharedPref.getInt("NUM_POSTS", 0);
-                    psts += 1;
-                    editor.putInt("NUM_POSTS", psts);
-                    editor.commit();
-
                     //TODO update this if post becomes a hotspot centroid
                     //int htspts = sharedPref.getInt("NUM_HTSPT", 0);
                     //htspts += 1;

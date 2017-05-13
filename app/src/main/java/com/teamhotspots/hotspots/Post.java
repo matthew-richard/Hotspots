@@ -1,5 +1,8 @@
 package com.teamhotspots.hotspots;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +19,7 @@ public class Post {
     private String timeStamp;
     private double lat;
     private double lng;
+    private String userID;
 
     public Post() {}
     public Post(String username, String msg, String imageUrl, String userIcon,
@@ -28,6 +32,10 @@ public class Post {
         this.lat = lat;
         this.lng = lng;
         this.numLikes = 0;
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) this.userID = user.getUid();
+        else this.userID = "lnOu8CBcUKQKl3q9HoLr3nGsG532";  // TODO: remove this once login page is working. For now, use John's
     }
 
     public String getUsername() {
@@ -66,6 +74,14 @@ public class Post {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public String getUserID() {
+        return userID;
+    }
+
+    public void setUserID(String userID) {
+        this.userID = userID;
     }
 
     public Map<String, Object> toMap() {
