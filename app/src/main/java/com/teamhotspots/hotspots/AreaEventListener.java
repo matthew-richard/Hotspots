@@ -59,6 +59,7 @@ public abstract class AreaEventListener {
 
         hotspotSquareRefs = new ArrayList<>();
         postSquareRefs = new ArrayList<>();
+        squareRefsFetched = new HashMap<>();
         hotspots = new HashMap<>();
         posts = new HashMap<>();
 
@@ -167,7 +168,7 @@ public abstract class AreaEventListener {
         if (!isCircle()) return false;
 
         float[] dist = new float[1];
-        Location.distanceBetween(post.getLat(), post.getLon(), circleCenter.latitude,
+        Location.distanceBetween(post.getLat(), post.getLng(), circleCenter.latitude,
                 circleCenter.longitude, dist);
         return dist[0] <= circleRadius;
     }
@@ -195,10 +196,8 @@ public abstract class AreaEventListener {
     public abstract void onPostRemoved(DataSnapshot post);
 
     public void startListening() {
-        List<DatabaseReference> squareRefs = new ArrayList<>(hotspotSquareRefs);
-        squareRefs.addAll(postSquareRefs);
 
-        for (DatabaseReference squareRef : squareRefs) {
+        for (DatabaseReference squareRef : squareRefsFetched.keySet()) {
             squareRef.addChildEventListener(childEventListener);
             squareRef.addValueEventListener(valueEventListener);
         }
@@ -245,7 +244,8 @@ public abstract class AreaEventListener {
     }
 
     public static String getSquare(double lat, double lon) {
-        return String.format(Locale.US, "%.2f,%.2f", lat, lon);
+        return String.format(Locale.US, "%.2f;%.2f", truncateToHundredths(lat),
+                truncateToHundredths(lon)).replace('.', ',');
     }
 
     /** Returns overlapping squares of a circle rather than a rectangle **/

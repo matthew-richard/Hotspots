@@ -104,6 +104,7 @@ public class Feed extends Fragment {
 
         // Use a simple list adapter
         adapter = new PostAdapter(getContext());
+        postsListView.setAdapter(adapter);
 
         // Listen to local area and pass post events to list adapter
         areaListener = new AreaEventListener(new LatLng(hotspotLat, hotspotLng), listenRadius) {

@@ -159,11 +159,11 @@ public class NewPostActivity extends AppCompatActivity implements
     public void writeNewPost(Post post) {
         // Push the post details
         final DatabaseReference newPost = mDatabase.child("posts/"
-                + AreaEventListener.getSquare(post.getLat(), post.getLon())).push();
+                + AreaEventListener.getSquare(post.getLat(), post.getLng())).push();
         newPost.setValue(post);
 
         final int hotspotCircleRadius = Integer.parseInt(getString(R.string.hotspotCircleRadius));
-        final LatLng postLatLng = new LatLng(post.getLat(), post.getLon());
+        final LatLng postLatLng = new LatLng(post.getLat(), post.getLng());
 
         // Generate new hotspot if necessary
         new AreaEventListener(postLatLng, hotspotCircleRadius) {

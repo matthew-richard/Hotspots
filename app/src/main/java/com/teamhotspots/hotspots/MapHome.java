@@ -336,7 +336,7 @@ public class MapHome extends Fragment
         Bundle args = new Bundle();
         args.putString("hotspotKey", hotspot.key);
         args.putDouble("hotspotLat", hotspot.lat);
-        args.putDouble("hotspotLon", hotspot.lng);
+        args.putDouble("hotspotLng", hotspot.lng);
         feed.setArguments(args);
 
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
