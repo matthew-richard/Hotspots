@@ -230,6 +230,8 @@ public class MainActivity extends AppCompatActivity
     // launch new post activity
     public void launchPost(View view) {
         Intent intent = new Intent(this, NewPostActivity.class);
+        intent.putExtra("latitude", mapFragment.lastLocation.getLatitude());
+        intent.putExtra("longitude", mapFragment.lastLocation.getLongitude());
         startActivity(intent);
     }
 

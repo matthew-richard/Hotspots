@@ -77,13 +77,6 @@ public class PhotoConfirm extends Fragment {
         // Required empty public constructor
     }
 
-    public static PhotoConfirm newInstance(String param1, String param2) {
-        PhotoConfirm fragment = new PhotoConfirm();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -178,40 +171,8 @@ public class PhotoConfirm extends Fragment {
 
                 timeStamp = new Date().toString();
 
-                if ( Build.VERSION.SDK_INT >= 23 &&
-                        ContextCompat.checkSelfPermission( getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION )
-                                == PackageManager.PERMISSION_GRANTED) {
-
-                    LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-                    final LocationListener locationListener = new LocationListener() {
-                        @Override
-                        public void onLocationChanged(Location location) {
-                            lat = location.getLatitude();
-                            lng = location.getLongitude();
-                        }
-
-                        @Override
-                        public void onStatusChanged(String dks, int nds, Bundle fdksl) {
-                        }
-
-                        @Override
-                        public void onProviderEnabled(String temp) {
-                        }
-
-                        @Override
-                        public void onProviderDisabled(String temp) {
-                        }
-
-                    };
-                    lm.requestLocationUpdates(
-                            LocationManager.NETWORK_PROVIDER, 5000, 10, locationListener);
-                    Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    if (location == null) {
-                        location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                    }
-                    lng = location.getLongitude();
-                    lat = location.getLatitude();
-                }
+                lat = getArguments().getDouble("latitude");
+                lng = getArguments().getDouble("longitude");
 
                 //image
                 final NewPostActivity activity = (NewPostActivity) getActivity();

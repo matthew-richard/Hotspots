@@ -175,6 +175,7 @@ public abstract class AreaEventListener {
     }
 
     private void setSquares(LatLngBounds area) {
+        // TODO: Fix concurrency issues
         boolean oldListening = isListening();
         stopListening();
 

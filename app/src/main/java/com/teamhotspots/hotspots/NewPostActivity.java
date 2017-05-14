@@ -295,19 +295,11 @@ public class NewPostActivity extends AppCompatActivity implements
 
                     String timeStamp = new Date().toString();
 
-                    LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-                    try {
-                        Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                        if (location == null) {
-                            location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                        }
-                        double lat = location.getLatitude();
-                        double lng = location.getLongitude();
-                        ((NewPostActivity) getActivity()).writeNewPost(new Post(username, msg, null,
-                                userIcon, timeStamp, lat, lng, false));
-                    } catch (SecurityException e) {
-                        Toast.makeText(getActivity(), "Should add location permission, post not uploaded.", Toast.LENGTH_LONG).show();
-                    }
+                    double lat = getActivity().getIntent().getDoubleExtra("latitude", 0);
+                    double lng = getActivity().getIntent().getDoubleExtra("longitude", 0);
+
+                    ((NewPostActivity) getActivity()).writeNewPost(new Post(username, msg, null,
+                            userIcon, timeStamp, lat, lng, false));
 
                     //return to previous activity
                     getActivity().finish();
@@ -396,21 +388,16 @@ public class NewPostActivity extends AppCompatActivity implements
         @Override
         public void onActivityResult(int requestCode, int resultCode, Intent data) {
             //go to photo confirm
-            Fragment fragment = null;
-            Class fragmentClass;
-
-            fragmentClass = PhotoConfirm.class;
-
-            try {
-                fragment = (Fragment) fragmentClass.newInstance();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            Fragment fragment = new PhotoConfirm();
+            Bundle args = new Bundle();
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+
+            args.putDouble("latitude", getActivity().getIntent().getDoubleExtra("latitude",0));
+            args.putDouble("longitude", getActivity().getIntent().getDoubleExtra("longitude",0));
 
             if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
                 //Uri selectedImageUri = data.getData();
-                Bundle args = new Bundle();
+
                 args.putParcelable("path", mPhotoUri);
 
                 fragment.setArguments(args);
@@ -418,7 +405,6 @@ public class NewPostActivity extends AppCompatActivity implements
 
             } else if (requestCode == REQUEST_IMAGE_PICKER && resultCode == RESULT_OK) {
                 Uri selectedImageUri = data.getData();
-                Bundle args = new Bundle();
                 args.putParcelable("path", selectedImageUri);
                 fragment.setArguments(args);
                 fragmentManager.beginTransaction().replace(R.id.main_content, fragment).addToBackStack(null).commit();

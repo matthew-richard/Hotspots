@@ -79,6 +79,8 @@ public class Post {
         return userID;
     }
 
+    public String getTimeStamp() {return timeStamp;}
+
     public Map<String, Boolean> getLikedBy() {
         return likedBy;
     }
