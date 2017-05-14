@@ -3,6 +3,7 @@ package com.teamhotspots.hotspots;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -45,21 +46,12 @@ import static com.teamhotspots.hotspots.R.layout.post;
  * create an instance of this fragment.
  */
 public class Statistics extends Fragment {
-    private OnFragmentInteractionListener mListener;
     private String userID;
+    private DatabaseReference userRef;
+    private ValueEventListener userListener;
 
     public Statistics() {
         // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static Statistics newInstance(String param1, String param2) {
-        Statistics fragment = new Statistics();
-        return fragment;
     }
 
     @Override
@@ -74,39 +66,29 @@ public class Statistics extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_statistics, container, false);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) this.userID = user.getUid();
-        else userID = "lnOu8CBcUKQKl3q9HoLr3nGsG532";  // TODO: remove this once login page is working. For now, use John's
+        this.userID = user.getUid();
 
         Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
         toolbar.setTitle("Statistics");
         NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
         navigationView.getMenu().getItem(2).setChecked(true);
 
-        final FirebaseDatabase database = FirebaseDatabase.getInstance();
-        Query postsRef = database.getReference().child("posts").orderByChild("userID").equalTo(userID);
-
-        postsRef.addValueEventListener(new ValueEventListener() {
+        userRef = FirebaseDatabase.getInstance().getReference().child("users/" + userID);
+        userListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d("created", dataSnapshot.getKey());
-                int count = 0;
-                int numLikes = 0;
-                int hotspotCreated = 0;
-                for (DataSnapshot d : dataSnapshot.getChildren()) {
-                    Post p = d.getValue(Post.class);
-                    numLikes += p.getNumLikes();
-                    hotspotCreated += p.getHotspotCreated();
-                    count++;
-                }
+                int numPostsCreated = (int) dataSnapshot.child("postsCreated").getChildrenCount();
+                int numLikes = (int) dataSnapshot.child("likesReceived").getChildrenCount();
+                int numHotspotsCreated = (int) dataSnapshot.child("hotspotsCreated").getChildrenCount();
 
                 TextView points = (TextView) rootView.findViewById(R.id.stat_total_pts_num);
                 points.setText(Integer.toString(numLikes));
 
                 TextView posts = (TextView) rootView.findViewById(R.id.stat_total_posts_num);
-                posts.setText(Integer.toString(count));
+                posts.setText(Integer.toString(numPostsCreated));
 
                 TextView hotspotsCreated = (TextView) rootView.findViewById(R.id.stat_hotspots_num);
-                hotspotsCreated.setText(Integer.toString(hotspotCreated));
+                hotspotsCreated.setText(Integer.toString(numHotspotsCreated));
 
             }
 
@@ -114,47 +96,16 @@ public class Statistics extends Fragment {
             public void onCancelled(DatabaseError databaseError) {
                 System.out.println("The read failed: " + databaseError.getCode());
             }
-                });
+        };
+        userRef.addValueEventListener(userListener);
 
         return rootView;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        userRef.removeEventListener(userListener);
     }
 }

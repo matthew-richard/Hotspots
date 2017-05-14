@@ -156,11 +156,15 @@ public class NewPostActivity extends AppCompatActivity implements
     }
 
 
-    public void writeNewPost(Post post) {
+    public void writeNewPost(final Post post) {
         // Push the post details
         final DatabaseReference newPost = mDatabase.child("posts/"
                 + AreaEventListener.getSquare(post.getLat(), post.getLng())).push();
         newPost.setValue(post);
+
+        // Add to user's "postsCreated" list
+        mDatabase.child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid()
+                + "/postsCreated/" + newPost.getKey()).setValue(true);
 
         final int hotspotCircleRadius = Integer.parseInt(getString(R.string.hotspotCircleRadius));
         final LatLng postLatLng = new LatLng(post.getLat(), post.getLng());
@@ -187,16 +191,22 @@ public class NewPostActivity extends AppCompatActivity implements
                     }
                 }
 
-                // If there are enough hotspots
-                if (!hotspotTooClose && hotspots.size() >= hotspotCreationThreshold) {
+                // If there are enough posts and we're far away from other hotspots
+                if (!hotspotTooClose && posts.size() >= hotspotCreationThreshold) {
                     // Create hotspot at new post's location
                     DatabaseReference square = mDatabase.child("hotspots/" +
-                            AreaEventListener.getSquare(postLatLng.latitude, postLatLng.longitude)
-                            + "/");
+                            AreaEventListener.getSquare(postLatLng.latitude, postLatLng.longitude));
 
                     DatabaseReference newHotspot = square.push();
                     newHotspot.setValue(new Hotspot(postLatLng.latitude, postLatLng.longitude,
                             new HashMap<String, Boolean>()));
+
+                    // Mark new post as hotspot centroid
+                    newPost.child("hotspotCreated").setValue(true);
+
+                    // Add to user's "hotspotsCreated" list
+                    mDatabase.child("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid()
+                            + "/hotspotsCreated/" + newHotspot.getKey()).setValue(true);
                 }
 
                 // Stop listening
@@ -215,17 +225,8 @@ public class NewPostActivity extends AppCompatActivity implements
             public void onHotspotRemoved(DataSnapshot hotspot) {}
             @Override
             public void onPostRemoved(DataSnapshot post) {}
-        };
+        }.startListening();
 
-        // Update user activity (stored in shared prefs)
-        /* String created = sharedPref.getString("CREATED", "");
-        SharedPreferences.Editor editor = sharedPref.edit();
-        StringBuilder sb = new StringBuilder(created);
-        sb.append(newPost.getKey() + ",");
-        editor.putString("CREATED", sb.toString());
-        editor.commit(); */
-
-        // TODO: Update user activity
     }
 
     /**
@@ -266,10 +267,6 @@ public class NewPostActivity extends AppCompatActivity implements
             final Button button_submit = (Button) rootView.findViewById(R.id.submit);
             button_submit.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    //TODO update this if post becomes a hotspot centroid
-                    int hotspotCreated = 0;
-                    //if hotspot Created by this post, set hotspotCreated to 1 - this is for statistics
-
                     String username = user.getDisplayName();
                     if (username == null) {
                         username = "Anonymous";
@@ -306,9 +303,8 @@ public class NewPostActivity extends AppCompatActivity implements
                         }
                         double lat = location.getLatitude();
                         double lng = location.getLongitude();
-                        ((NewPostActivity) getActivity())
-                                .writeNewPost(new Post(username, msg, "none", userIcon, timeStamp,
-                                        lat, lng, hotspotCreated));
+                        ((NewPostActivity) getActivity()).writeNewPost(new Post(username, msg, null,
+                                userIcon, timeStamp, lat, lng, false));
                     } catch (SecurityException e) {
                         Toast.makeText(getActivity(), "Should add location permission, post not uploaded.", Toast.LENGTH_LONG).show();
                     }

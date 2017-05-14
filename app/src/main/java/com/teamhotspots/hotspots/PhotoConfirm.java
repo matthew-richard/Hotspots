@@ -147,9 +147,6 @@ public class PhotoConfirm extends Fragment {
         final Button button_submit = (Button) rootView.findViewById(R.id.submit);
         button_submit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                //TODO update this if post becomes a hotspot centroid
-                hotspotCreated = 0;
-                //if hotspot Created by this post, set hotspotCreated to 1 - this is for statistics
 
                 //username
                 username = user.getDisplayName();
@@ -225,8 +222,8 @@ public class PhotoConfirm extends Fragment {
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                         imageUrl = taskSnapshot.getDownloadUrl().toString();
 
-                        activity.writeNewPost(
-                                new Post(username, msg, imageUrl, usericon, timeStamp, lat, lng, hotspotCreated));
+                        activity.writeNewPost(new Post(username, msg, imageUrl, usericon, timeStamp,
+                                lat, lng, false));
 
                     }
                 });

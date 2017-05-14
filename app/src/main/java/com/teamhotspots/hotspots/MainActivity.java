@@ -45,8 +45,6 @@ import java.net.URI;
 
 public class MainActivity extends AppCompatActivity
         implements OnRequestPermissionsResultCallback,
-        Settings.OnFragmentInteractionListener,
-        Statistics.OnFragmentInteractionListener,
         NavigationView.OnNavigationItemSelectedListener {
 
     /* For requesting location permissions at runtime */
@@ -207,11 +205,6 @@ public class MainActivity extends AppCompatActivity
 
         // Don't display navigation item as selected if a new activity was started
         return !newActivityStarted;
-    }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-        //leave empty
     }
 
     @Override

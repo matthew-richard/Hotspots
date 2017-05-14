@@ -22,20 +22,20 @@ public class Post {
     private String msg;
     private String imageUrl;
     private String usericon;
-    private int numLikes;
     private String timeStamp;
     private double lat;
     private double lng;
     private String userID;
-    private int hotspotCreated;
-    private List<String> likedBy;
+    public boolean hotspotCreated;
+    private Map<String, Boolean> likedBy;
 
     @Exclude
     public DatabaseReference ref;
 
-    public Post() {}
+    public Post () {}
+
     public Post(String username, String msg, String imageUrl, String userIcon,
-                String timeStamp, double lat, double lng, int hotspotCreated) {
+                String timeStamp, double lat, double lng, boolean hotspotCreated) {
         this.username = username;
         this.msg = msg;
         this.imageUrl = imageUrl;
@@ -43,21 +43,19 @@ public class Post {
         this.timeStamp = timeStamp;
         this.lat = lat;
         this.lng = lng;
-        this.numLikes = 0;
         this.hotspotCreated = hotspotCreated;
 
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) this.userID = user.getUid();
-        else this.userID = "lnOu8CBcUKQKl3q9HoLr3nGsG532";  // TODO: remove this once login page is working. For now, use John's
+        this.likedBy = new HashMap<>();
 
-        likedBy = new ArrayList<String>();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        this.userID = user.getUid();
     }
 
     public String getUsername() {
         return username;
     }
 
-    public int getHotspotCreated() {return this.hotspotCreated;}
+    public boolean getHotspotCreated() {return this.hotspotCreated;}
 
     public void setUsername(String username) {
         this.username = username;
@@ -69,22 +67,6 @@ public class Post {
         return msg;
     }
 
-    public void setMsg(String msg) {
-        this.msg = msg;
-    }
-
-    public int getNumLikes() {
-        return this.numLikes;
-    }
-
-    public void upvote() {
-        this.numLikes++;
-    }
-
-    public void undoVote() { this.numLikes--; }
-
-    public boolean isPicturePost() { return imageUrl != null; }
-
     public String getImageUrl() {
         return imageUrl;
     }
@@ -93,65 +75,50 @@ public class Post {
 
     public double getLng() {return this.lng; }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
     public String getUserID() {
         return userID;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
-    }
-
-    public List<String> getLikedBy() {
+    public Map<String, Boolean> getLikedBy() {
         return likedBy;
     }
 
-    public void setLikedBy(List<String> likedBy) {
-        this.likedBy = likedBy;
+    @Exclude
+    public int getNumLikes() {
+        return likedBy == null ? 0 : likedBy.size();
     }
 
-    public void addToLikedBy(String userID) {
-        if (likedBy == null) {
-            likedBy = new ArrayList<String>();
-        }
-        likedBy.add(userID);
+    @Exclude
+    public void upvote() {
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if(likedBy != null) this.likedBy.put(uid, true);
+        ref.child("likedBy/" + uid).setValue(true);
+        ref.getRoot().child("users/" + uid + "/likesGiven/" + ref.getKey()).setValue(true);
+        ref.getRoot().child("users/" + this.userID + "/likesReceived/" + ref.getKey()).setValue(true);
     }
 
-    public void removeFromLikedBy(String userID) {
-        if (likedBy == null) {
-            likedBy = new ArrayList<String>();
-            return;
-        }
-        likedBy.remove(userID);
+    @Exclude
+    public void undoVote() {
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (likedBy != null) this.likedBy.remove(uid);
+        ref.child("likedBy/" + uid).removeValue();
+        ref.getRoot().child("users/" + uid + "/likesGiven/" + ref.getKey()).removeValue();
+        ref.getRoot().child("users/" + this.userID + "/likesReceived/" + ref.getKey()).removeValue();
     }
 
-    public boolean inLikedBy(String userID) {
-        if (likedBy == null) {
-            likedBy = new ArrayList<String>();
-            return false;
-        }
-        return likedBy.contains(userID);
+    @Exclude
+    public boolean isLikedBy(String userID) {
+        return likedBy != null && likedBy.containsKey(userID);
     }
 
-    public Map<String, Object> toMap() {
-        HashMap<String, Object> result = new HashMap<>();
-        result.put("username", username);
-        result.put("msg", msg);
-        result.put("imageUrl", imageUrl);
-        result.put("usericon", usericon);
-        result.put("numLikes", numLikes);
-        result.put("timeStamp", timeStamp);
-        result.put("lat", lat);
-        result.put("lng", lng);
-        result.put("userID", userID);
-        result.put("hotspotCreated", hotspotCreated);
-        result.put("likedBy", likedBy);
-
-        return result;
+    @Exclude
+    public boolean isLikedByMe() {
+        return isLikedBy(FirebaseAuth.getInstance().getCurrentUser().getUid());
     }
+
+    @Exclude
+    public boolean isPicturePost() { return imageUrl != null; }
+
 
     @Override
     @Exclude

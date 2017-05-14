@@ -58,7 +58,7 @@ import java.util.List;
 /**
  * Created by Kathleen on 4/7/2017.
  */
-
+// TODO: Fix local feed
 public class Feed extends Fragment {
     private ListView postsListView;
     private Post itemSelected;
@@ -66,7 +66,6 @@ public class Feed extends Fragment {
 
     private AreaEventListener areaListener;
     private ListAdapter adapter;
-    private String userID;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -76,10 +75,6 @@ public class Feed extends Fragment {
 
         Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
         toolbar.setTitle("Feed");
-
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) this.userID = user.getUid();
-        else this.userID = "lnOu8CBcUKQKl3q9HoLr3nGsG532";  // TODO: remove this once login page is working. For now, use John's
 
         mReference = FirebaseDatabase.getInstance().getReference();
         postsListView = (ListView) view.findViewById(R.id.feed_list);
@@ -227,7 +222,7 @@ public class Feed extends Fragment {
             this.likes = likes;
             this.ref = ref;
 
-            if (post.inLikedBy(userID)) {
+            if (post.isLikedByMe()) {
                 this.pressed = true;
                 thumbIcon.setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_ATOP);
             } else {
@@ -248,18 +243,13 @@ public class Feed extends Fragment {
                 pressed = true;
                 post.upvote();
                 thumbIcon.setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_ATOP);
-                post.addToLikedBy(userID);
             } else {
                 pressed = false;
                 post.undoVote();
                 thumbIcon.clearColorFilter();
-                post.removeFromLikedBy(userID);
             }
 
             likes.setText("" + post.getNumLikes());
-
-            ref.child("numLikes").setValue(post.getNumLikes());
-            ref.child("likedBy").setValue(post.getLikedBy());
         }
     }
 

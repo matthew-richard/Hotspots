@@ -52,16 +52,7 @@ import static android.app.Activity.RESULT_OK;
 import static android.content.Context.MODE_PRIVATE;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link Settings.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link Settings#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class Settings extends Fragment {
-    private OnFragmentInteractionListener mListener;
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_IMAGE_PICKER = 2;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
@@ -73,15 +64,6 @@ public class Settings extends Fragment {
 
     public Settings() {
         // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     */
-    public static Settings newInstance(String param1, String param2) {
-        Settings fragment = new Settings();
-        return fragment;
     }
 
     @Override
@@ -289,12 +271,6 @@ public class Settings extends Fragment {
         cursor.moveToFirst();
         return cursor.getString(column_index);
     }
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
 
     public Bitmap rotateImage(int orientation, Bitmap bitmap) {
         Matrix matrix = new Matrix();
@@ -310,21 +286,10 @@ public class Settings extends Fragment {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true); // rotating bitmap
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
     }
 
     @Override
@@ -336,19 +301,5 @@ public class Settings extends Fragment {
         } else if (requestCode == REQUEST_IMAGE_PICKER && resultCode == RESULT_OK) {
             mPhotoUri = data.getData();
         }
-    }
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
     }
 }

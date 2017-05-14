@@ -41,22 +41,35 @@ public abstract class AreaEventListener {
     private LatLng circleCenter;
     private int circleRadius;
 
+    private boolean listening;
+
     public AreaEventListener(LatLngBounds area) {
-        circleCenter = null;
-        initialize(area);
+        initialize();
+        setArea(area);
     }
 
     public AreaEventListener(LatLng circleCenter, int circleRadius) {
-        this.circleCenter = circleCenter;
-        this.circleRadius = circleRadius;
-        initialize(getCircleBounds());
+        initialize();
+        setArea(circleCenter, circleRadius);
     }
 
-    private void initialize(LatLngBounds area) {
+    public void setArea(LatLng circleCenter, int circleRadius) {
+        this.circleCenter = circleCenter;
+        this.circleRadius = circleRadius;
+        setSquares(getCircleBounds());
+    }
+
+    public void setArea(LatLngBounds area) {
+        this.circleCenter = null;
+        setSquares(area);
+    }
+
+    private void initialize() {
         if (db == null) {
             db = FirebaseDatabase.getInstance().getReference();
         }
 
+        listening = false;
         hotspotSquareRefs = new ArrayList<>();
         postSquareRefs = new ArrayList<>();
         squareRefsFetched = new HashMap<>();
@@ -87,47 +100,65 @@ public abstract class AreaEventListener {
         childEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                try {
+                // Get key identifying whether this dataSnapshot is a hotspot or post
+                String type = dataSnapshot.getRef().getParent().getParent().getKey();
+
+                switch (type) {
+                case "hotspots":
                     Hotspot hotspot = dataSnapshot.getValue(Hotspot.class);
                     if (!isCircle() || inCircle(hotspot)) {
+                        boolean newRef = !hotspots.containsKey(dataSnapshot.getRef());
                         hotspots.put(dataSnapshot.getRef(), dataSnapshot);
-                        onHotspotAdded(dataSnapshot);
+                        if (newRef) onHotspotAdded(dataSnapshot);
+                        else onHotspotChanged(dataSnapshot);
                     }
-                } catch (Exception e) {
+                break;
+                case "posts":
                     Post post = dataSnapshot.getValue(Post.class);
                     if (!isCircle() || inCircle(post)) {
+                        boolean newRef = !posts.containsKey(dataSnapshot.getRef());
                         posts.put(dataSnapshot.getRef(), dataSnapshot);
-                        onPostAdded(dataSnapshot);
+                        if (newRef) onPostAdded(dataSnapshot);
+                        else onPostChanged(dataSnapshot);
                     }
                 }
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                try {
+                String type = dataSnapshot.getRef().getParent().getParent().getKey();
+
+                switch (type) {
+                case "hotspots":
                     Hotspot hotspot = dataSnapshot.getValue(Hotspot.class);
                     if (!isCircle() || inCircle(hotspot)) {
                         hotspots.put(dataSnapshot.getRef(), dataSnapshot);
                         onHotspotChanged(dataSnapshot);
                     }
-                } catch (Exception e) {
+                break;
+                case "posts":
                     Post post = dataSnapshot.getValue(Post.class);
                     if (!isCircle() || inCircle(post)) {
                         posts.put(dataSnapshot.getRef(), dataSnapshot);
                         onPostChanged(dataSnapshot);
                     }
+                break;
                 }
             }
 
             @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                try {
+            public void onChildRemoved(DataSnapshot dataSnapshot){
+                String type = dataSnapshot.getRef().getParent().getParent().getKey();
+
+                switch (type) {
+                case "hotspots":
                     Hotspot hotspot = dataSnapshot.getValue(Hotspot.class);
                     if (!isCircle() || inCircle(hotspot)) {
                         hotspots.remove(dataSnapshot.getRef());
                         onHotspotRemoved(dataSnapshot);
                     }
-                } catch (Exception e) {
+                break;
+                case "posts":
                     Post post = dataSnapshot.getValue(Post.class);
                     if (!isCircle() || inCircle(post)) {
                         posts.remove(dataSnapshot.getRef());
@@ -141,18 +172,59 @@ public abstract class AreaEventListener {
             @Override
             public void onCancelled(DatabaseError databaseError) {}
         };
+    }
+
+    private void setSquares(LatLngBounds area) {
+        boolean oldListening = isListening();
+        stopListening();
 
         List<String> squares = getOverlappingSquares(area);
         for (String square : squares) {
             DatabaseReference hotspotSquareRef = db.child("/hotspots/" + square);
             DatabaseReference postSquareRef = db.child("/posts/" + square);
 
-            hotspotSquareRefs.add(hotspotSquareRef);
-            postSquareRefs.add(postSquareRef);
+            // If we're not already listening to this square, start listening to it
+            if (!hotspotSquareRefs.contains(hotspotSquareRef)) {
+                hotspotSquareRefs.add(hotspotSquareRef);
+                postSquareRefs.add(postSquareRef);
 
-            squareRefsFetched.put(hotspotSquareRef, false);
-            squareRefsFetched.put(postSquareRef, false);
+                squareRefsFetched.put(hotspotSquareRef, false);
+                squareRefsFetched.put(postSquareRef, false);
+            }
         }
+
+        // Identify square refs that we don't need
+        List<String> squaresRemoved = new ArrayList<>();
+        for (DatabaseReference hotspotSquare : hotspotSquareRefs) {
+            if (!squares.contains(hotspotSquare.getKey())) {
+                squaresRemoved.add(hotspotSquare.getKey());
+            }
+        }
+
+        // Remove square refs (and their child hotspots and posts) from data
+        for (String squareRemoved : squaresRemoved) {
+            DatabaseReference postSquare = db.child("posts/" + squareRemoved);
+            postSquareRefs.remove(postSquare);
+            squareRefsFetched.remove(postSquare);
+
+            DatabaseReference hotspotSquare = db.child("hotspots/" + squareRemoved);
+            hotspotSquareRefs.remove(hotspotSquare);
+            squareRefsFetched.remove(hotspotSquare);
+
+            for (DatabaseReference hotspot : hotspots.keySet()) {
+                if (hotspot.getParent().getKey().equals(squareRemoved)) {
+                    hotspots.remove(hotspot);
+                }
+            }
+
+            for (DatabaseReference post : posts.keySet()) {
+                if (post.getParent().getKey().equals(squareRemoved)) {
+                    posts.remove(post);
+                }
+            }
+        }
+
+        if (oldListening) startListening();
     }
 
     private boolean inCircle(Hotspot hotspot) {
@@ -195,8 +267,12 @@ public abstract class AreaEventListener {
     public abstract void onHotspotRemoved(DataSnapshot hotspot);
     public abstract void onPostRemoved(DataSnapshot post);
 
-    public void startListening() {
+    public boolean isListening() {
+        return listening;
+    }
 
+    public void startListening() {
+        listening = true;
         for (DatabaseReference squareRef : squareRefsFetched.keySet()) {
             squareRef.addChildEventListener(childEventListener);
             squareRef.addValueEventListener(valueEventListener);
@@ -204,10 +280,8 @@ public abstract class AreaEventListener {
     }
 
     public void stopListening() {
-        List<DatabaseReference> squareRefs = new ArrayList<>(hotspotSquareRefs);
-        squareRefs.addAll(postSquareRefs);
-
-        for (DatabaseReference squareRef : squareRefs) {
+        listening = false;
+        for (DatabaseReference squareRef : squareRefsFetched.keySet()) {
             squareRef.removeEventListener(childEventListener);
             squareRef.removeEventListener(valueEventListener);
         }
@@ -246,11 +320,6 @@ public abstract class AreaEventListener {
     public static String getSquare(double lat, double lon) {
         return String.format(Locale.US, "%.2f;%.2f", truncateToHundredths(lat),
                 truncateToHundredths(lon)).replace('.', ',');
-    }
-
-    /** Returns overlapping squares of a circle rather than a rectangle **/
-    private List<String> getOverlappingSquares() {
-        return getOverlappingSquares(getCircleBounds());
     }
 
     private LatLngBounds getCircleBounds() {
