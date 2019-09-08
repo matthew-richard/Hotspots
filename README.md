@@ -1,6 +1,8 @@
 # Hotspots
 An Android app for discovering local communities.
 
+<img src="map_view.png" width="300">
+
 This app consists of three activities:
 - LoginActivity
 - Main Activity, with the following fragments:
